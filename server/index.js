@@ -492,7 +492,26 @@ app.post('/api/route/generate', (req, res) => {
   let totalWalkTime = 0;
   let totalVisitTime = 0;
 
-  const routeStops = selectedLocations.map((s, index) => {
+  const withDramaTitles = (location) => ({
+    ...location,
+    scenes: (location.scenes || []).map(scene => {
+      const drama = data.dramas.find(d => d.id === scene.dramaId);
+      return {
+        ...scene,
+        dramaTitle: drama ? drama.title : (scene.dramaTitle || '经典港剧'),
+        dramaRating: drama ? drama.rating : null,
+        dramaGenre: drama ? drama.genre : [],
+        dramaYear: drama ? drama.year : null
+      };
+    })
+  });
+
+  const enrichedLocations = selectedLocations.map(s => ({
+    ...s,
+    location: withDramaTitles(s.location)
+  }));
+
+  const routeStops = enrichedLocations.map((s, index) => {
     const stop = {
       order: index + 1,
       location: s.location,
@@ -506,7 +525,7 @@ app.post('/api/route/generate', (req, res) => {
     };
 
     if (index > 0) {
-      const prev = selectedLocations[index - 1].location;
+      const prev = enrichedLocations[index - 1].location;
       const distance = haversineDistance(
         prev.latitude, prev.longitude,
         s.location.latitude, s.location.longitude
@@ -525,7 +544,7 @@ app.post('/api/route/generate', (req, res) => {
 
   const allEasterEggs = [];
   if (includeEasterEggs !== false) {
-    selectedLocations.forEach(s => {
+    enrichedLocations.forEach(s => {
       if (s.location.easterEggs && s.location.easterEggs.length > 0) {
         s.location.easterEggs.forEach(egg => {
           allEasterEggs.push({
@@ -540,8 +559,8 @@ app.post('/api/route/generate', (req, res) => {
 
   const route = {
     id: Date.now(),
-    name: generateRouteName(genres, selectedLocations.length),
-    description: generateRouteDescription(genres, selectedLocations),
+    name: generateRouteName(genres, enrichedLocations.length),
+    description: generateRouteDescription(genres, enrichedLocations, includeEasterEggs),
     stops: routeStops,
     totalDistance: Math.round(totalDistance),
     totalWalkTime: totalWalkTime,
@@ -581,7 +600,7 @@ function generateRouteName(genres, stopCount) {
   return `${prefix} · ${stopCount}站经典路线`;
 }
 
-function generateRouteDescription(genres, selectedLocations) {
+function generateRouteDescription(genres, selectedLocations, includeEasterEggs) {
   const locationNames = selectedLocations.map(s => s.location.name).join('、');
 
   let genreDesc = '';
@@ -609,7 +628,8 @@ function generateRouteDescription(genres, selectedLocations) {
   });
   const dramasStr = Array.from(dramaList).slice(0, 4).join('、');
 
-  return `${genreDesc}的专属路线，串联${locationNames}。${statusDesc}，沿途覆盖${dramasStr}等经典剧集场景，附隐藏彩蛋点攻略。`;
+  const eggDesc = includeEasterEggs !== false ? '，附隐藏彩蛋点攻略' : '';
+  return `${genreDesc}的专属路线，串联${locationNames}。${statusDesc}，沿途覆盖${dramasStr}等经典剧集场景${eggDesc}。`;
 }
 
 app.post('/api/dramas', (req, res) => {
