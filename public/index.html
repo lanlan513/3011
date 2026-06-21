@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>港剧时光档案馆 - 重温90年代经典</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="scanline"></div>
+    <div class="noise"></div>
+
+    <header class="tv-header">
+        <div class="tv-frame">
+            <div class="tv-screen">
+                <div class="tv-content">
+                    <h1 class="main-title">
+                        <span class="title-cn">港剧时光档案馆</span>
+                        <span class="title-en">HONG KONG DRAMA ARCHIVE</span>
+                    </h1>
+                    <p class="subtitle">重温90年代经典 · 镌刻永恒时光</p>
+                </div>
+                <div class="tv-noise-overlay"></div>
+                <div class="tv-glow"></div>
+            </div>
+            <div class="tv-base">
+                <div class="tv-knob left"></div>
+                <div class="tv-brand">TVB · 經典</div>
+                <div class="tv-knob right"></div>
+            </div>
+        </div>
+    </header>
+
+    <nav class="vhs-nav">
+        <div class="nav-container">
+            <button class="nav-btn active" data-page="home">
+                <span class="nav-icon">📼</span>
+                <span class="nav-text">首页</span>
+            </button>
+            <button class="nav-btn" data-page="dramas">
+                <span class="nav-icon">📺</span>
+                <span class="nav-text">剧集库</span>
+            </button>
+            <button class="nav-btn" data-page="actors">
+                <span class="nav-icon">🎭</span>
+                <span class="nav-text">演员录</span>
+            </button>
+            <button class="nav-btn" data-page="quotes">
+                <span class="nav-icon">💬</span>
+                <span class="nav-text">经典台词</span>
+            </button>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section id="home-page" class="page active">
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-number" id="stat-dramas">--</span>
+                    <span class="stat-label">部经典剧集</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="stat-actors">--</span>
+                    <span class="stat-label">位知名演员</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="stat-quotes">--</span>
+                    <span class="stat-label">句经典台词</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="stat-genres">--</span>
+                    <span class="stat-label">种题材类型</span>
+                </div>
+            </div>
+
+            <div class="quote-ticker">
+                <div class="ticker-label">今日经典</div>
+                <div class="ticker-content" id="daily-quote">加载中...</div>
+            </div>
+
+            <div class="section-header">
+                <h2 class="section-title"><span class="tape-icon">📼</span> 热门推荐</h2>
+                <div class="vhs-stripe"></div>
+            </div>
+
+            <div class="dramas-grid" id="featured-dramas"></div>
+
+            <div class="section-header">
+                <h2 class="section-title"><span class="tape-icon">📺</span> 快速导航</h2>
+                <div class="vhs-stripe"></div>
+            </div>
+
+            <div class="quick-nav">
+                <div class="quick-card" data-page="dramas" data-genre="武侠">
+                    <div class="quick-icon">⚔️</div>
+                    <div class="quick-title">武侠古装</div>
+                </div>
+                <div class="quick-card" data-page="dramas" data-genre="商战">
+                    <div class="quick-icon">💼</div>
+                    <div class="quick-title">商战风云</div>
+                </div>
+                <div class="quick-card" data-page="dramas" data-genre="警匪">
+                    <div class="quick-icon">🚓</div>
+                    <div class="quick-title">警匪刑侦</div>
+                </div>
+                <div class="quick-card" data-page="dramas" data-genre="喜剧">
+                    <div class="quick-icon">😂</div>
+                    <div class="quick-title">喜剧爆笑</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="dramas-page" class="page">
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label class="filter-label">搜索</label>
+                    <input type="text" id="search-input" class="filter-input" placeholder="输入剧名或关键词...">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">题材</label>
+                    <select id="genre-select" class="filter-select">
+                        <option value="">全部题材</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">年代</label>
+                    <select id="year-select" class="filter-select">
+                        <option value="">全部年代</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">排序</label>
+                    <select id="sort-select" class="filter-select">
+                        <option value="">默认排序</option>
+                        <option value="rating">评分最高</option>
+                        <option value="year">年代由远及近</option>
+                        <option value="year-desc">年代由近及远</option>
+                    </select>
+                </div>
+                <button class="filter-btn" id="reset-btn">重置</button>
+            </div>
+
+            <div class="dramas-grid" id="dramas-list"></div>
+
+            <div class="loading" id="dramas-loading" style="display:none;">
+                <div class="loading-spinner"></div>
+                <p>加载中...</p>
+            </div>
+
+            <div class="empty-state" id="dramas-empty" style="display:none;">
+                <p>📼 未找到相关剧集</p>
+            </div>
+        </section>
+
+        <section id="actors-page" class="page">
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label class="filter-label">搜索演员</label>
+                    <input type="text" id="actor-search" class="filter-input" placeholder="输入演员姓名...">
+                </div>
+            </div>
+
+            <div class="actors-grid" id="actors-list"></div>
+
+            <div class="loading" id="actors-loading" style="display:none;">
+                <div class="loading-spinner"></div>
+                <p>加载中...</p>
+            </div>
+        </section>
+
+        <section id="quotes-page" class="page">
+            <div class="section-header">
+                <h2 class="section-title"><span class="tape-icon">💬</span> 经典台词录</h2>
+                <div class="vhs-stripe"></div>
+            </div>
+
+            <div class="quotes-container" id="quotes-list"></div>
+
+            <div class="loading" id="quotes-loading" style="display:none;">
+                <div class="loading-spinner"></div>
+                <p>加载中...</p>
+            </div>
+        </section>
+
+        <section id="drama-detail-page" class="page">
+            <button class="back-btn" onclick="goBack()">← 返回列表</button>
+            <div id="drama-detail"></div>
+        </section>
+
+        <section id="actor-detail-page" class="page">
+            <button class="back-btn" onclick="goBack()">← 返回列表</button>
+            <div id="actor-detail"></div>
+        </section>
+    </main>
+
+    <footer class="vhs-footer">
+        <div class="footer-content">
+            <p class="footer-text">港剧时光档案馆 · 致敬90年代黄金岁月</p>
+            <p class="footer-copyright">© 2024 HONG KONG DRAMA ARCHIVE · 经典永不褪色</p>
+            <div class="vhs-tracks">
+                <div class="track"></div>
+                <div class="track"></div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
