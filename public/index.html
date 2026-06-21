@@ -53,6 +53,10 @@
                 <span class="nav-icon">📍</span>
                 <span class="nav-text">场景地图</span>
             </button>
+            <button class="nav-btn" data-page="route">
+                <span class="nav-icon">🗺️</span>
+                <span class="nav-text">朝圣路线</span>
+            </button>
         </div>
     </nav>
 
@@ -191,6 +195,34 @@
         </section>
 
         <section id="locations-page" class="page">
+            <div class="checkin-stats-bar">
+                <div class="checkin-stat-item">
+                    <span class="checkin-stat-icon">✅</span>
+                    <div class="checkin-stat-info">
+                        <span class="checkin-stat-number" id="checkin-count">0</span>
+                        <span class="checkin-stat-label">已打卡地点</span>
+                    </div>
+                </div>
+                <div class="checkin-stat-item">
+                    <span class="checkin-stat-icon">📍</span>
+                    <div class="checkin-stat-info">
+                        <span class="checkin-stat-number" id="location-total">0</span>
+                        <span class="checkin-stat-label">总取景地数</span>
+                    </div>
+                </div>
+                <div class="checkin-stat-item">
+                    <span class="checkin-stat-icon">🎯</span>
+                    <div class="checkin-stat-info">
+                        <span class="checkin-stat-number" id="checkin-progress">0%</span>
+                        <span class="checkin-stat-label">打卡进度</span>
+                    </div>
+                </div>
+                <button class="route-entry-btn" onclick="navigateTo('route')">
+                    <span>🗺️</span>
+                    <span>生成我的朝圣路线</span>
+                </button>
+            </div>
+
             <div class="filter-bar">
                 <div class="filter-group">
                     <label class="filter-label">搜索地点</label>
@@ -200,6 +232,12 @@
                     <label class="filter-label">区域</label>
                     <select id="district-select" class="filter-select">
                         <option value="">全部区域</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">题材</label>
+                    <select id="location-genre-select" class="filter-select">
+                        <option value="">全部题材</option>
                     </select>
                 </div>
                 <button class="filter-btn" id="location-reset-btn">重置</button>
@@ -224,9 +262,151 @@
             </div>
         </section>
 
+        <section id="route-page" class="page">
+            <div class="section-header">
+                <h2 class="section-title"><span class="tape-icon">🗺️</span> AI个性化港剧朝圣路线</h2>
+                <div class="vhs-stripe"></div>
+            </div>
+
+            <div class="route-builder-card">
+                <h3 class="route-section-title">✨ 设定你的朝圣偏好</h3>
+                <p class="route-subtitle">AI将根据你的喜好和已打卡记录，智能推荐最适合的路线</p>
+
+                <div class="preference-section">
+                    <h4 class="preference-title">🎬 最爱的港剧题材（可多选）</h4>
+                    <div class="genre-tags-container" id="preference-genres">
+                        <span class="genre-tag-preference" data-genre="警匪">🚓 警匪刑侦</span>
+                        <span class="genre-tag-preference" data-genre="商战">💼 商战风云</span>
+                        <span class="genre-tag-preference" data-genre="武侠">⚔️ 武侠古装</span>
+                        <span class="genre-tag-preference" data-genre="家庭">👨‍👩‍👧 家族伦理</span>
+                        <span class="genre-tag-preference" data-genre="爱情">❤️ 浪漫爱情</span>
+                        <span class="genre-tag-preference" data-genre="喜剧">😂 喜剧爆笑</span>
+                        <span class="genre-tag-preference" data-genre="法律">⚖️ 律政法庭</span>
+                        <span class="genre-tag-preference" data-genre="医疗">🏥 医疗职业</span>
+                        <span class="genre-tag-preference" data-genre="奇幻">✨ 奇幻驱魔</span>
+                        <span class="genre-tag-preference" data-genre="动作">🥊 热血动作</span>
+                    </div>
+                </div>
+
+                <div class="preference-row">
+                    <div class="preference-item">
+                        <h4 class="preference-title">🚩 路线起点</h4>
+                        <select id="start-location-select" class="filter-select">
+                            <option value="">AI智能推荐</option>
+                        </select>
+                    </div>
+                    <div class="preference-item">
+                        <h4 class="preference-title">🔢 路线站数</h4>
+                        <select id="max-stops-select" class="filter-select">
+                            <option value="3">3站（简约版）</option>
+                            <option value="5" selected>5站（经典版）</option>
+                            <option value="7">7站（深度游）</option>
+                            <option value="10">10站（全景游）</option>
+                        </select>
+                    </div>
+                    <div class="preference-item">
+                        <h4 class="preference-title">🥚 彩蛋点</h4>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="include-easter-eggs" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label">沿途包含隐藏彩蛋</span>
+                    </div>
+                </div>
+
+                <button class="generate-route-btn" id="generate-route-btn">
+                    <span class="btn-icon">🤖</span>
+                    <span class="btn-text">AI生成专属朝圣路线</span>
+                </button>
+            </div>
+
+            <div class="route-result-container" id="route-result-container" style="display:none;">
+                <div class="route-header-card">
+                    <div class="route-name-row">
+                        <h3 class="generated-route-name" id="generated-route-name">--</h3>
+                        <span class="ai-badge">✨ AI 智能生成</span>
+                    </div>
+                    <p class="generated-route-desc" id="generated-route-desc">--</p>
+                    <div class="route-stats-row">
+                        <div class="route-stat-chip">
+                            <span class="route-stat-icon">📍</span>
+                            <span id="route-stop-count">--</span>
+                            <span class="route-stat-sublabel">站</span>
+                        </div>
+                        <div class="route-stat-chip">
+                            <span class="route-stat-icon">🚶</span>
+                            <span id="route-walk-time">--</span>
+                            <span class="route-stat-sublabel">分钟步行</span>
+                        </div>
+                        <div class="route-stat-chip">
+                            <span class="route-stat-icon">📏</span>
+                            <span id="route-distance">--</span>
+                            <span class="route-stat-sublabel">公里</span>
+                        </div>
+                        <div class="route-stat-chip">
+                            <span class="route-stat-icon">⏱️</span>
+                            <span id="route-total-time">--</span>
+                            <span class="route-stat-sublabel">总耗时</span>
+                        </div>
+                        <div class="route-stat-chip">
+                            <span class="route-stat-icon">🥚</span>
+                            <span id="route-egg-count">--</span>
+                            <span class="route-stat-sublabel">个彩蛋</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="route-map-container">
+                    <div class="hk-map" id="route-map">
+                        <div class="map-label">🗺️ 我的朝圣路线图</div>
+                    </div>
+                </div>
+
+                <div class="route-timeline" id="route-timeline"></div>
+
+                <div class="easter-eggs-section" id="easter-eggs-section" style="display:none;">
+                    <div class="section-header">
+                        <h2 class="section-title"><span class="tape-icon">🥚</span> 沿途隐藏彩蛋攻略</h2>
+                        <div class="vhs-stripe"></div>
+                    </div>
+                    <div class="easter-eggs-grid" id="easter-eggs-grid"></div>
+                </div>
+
+                <div class="route-actions-bar">
+                    <button class="route-action-btn" id="save-preferences-btn">
+                        <span>💾</span>
+                        <span>保存偏好设置</span>
+                    </button>
+                    <button class="route-action-btn secondary" id="regenerate-route-btn">
+                        <span>🔄</span>
+                        <span>重新生成路线</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="route-loading" id="route-loading" style="display:none;">
+                <div class="ai-loading-animation">
+                    <div class="ai-brain">🧠</div>
+                    <div class="loading-text">AI正在为你规划最佳朝圣路线...</div>
+                    <div class="loading-subtext">分析打卡记录 · 匹配题材偏好 · 计算最优路径</div>
+                </div>
+            </div>
+        </section>
+
         <section id="location-detail-page" class="page">
             <button class="back-btn" onclick="goBack()">← 返回列表</button>
             <div id="location-detail"></div>
+        </section>
+
+        <section id="checkins-page" class="page">
+            <div class="section-header">
+                <h2 class="section-title"><span class="tape-icon">✅</span> 我的打卡记录</h2>
+                <div class="vhs-stripe"></div>
+            </div>
+            <div id="checkins-list"></div>
+            <div class="empty-state" id="checkins-empty" style="display:none;">
+                <p>📝 暂无打卡记录，快去场景地图打卡吧！</p>
+            </div>
         </section>
 
         <section id="drama-detail-page" class="page">

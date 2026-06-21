@@ -23,13 +23,23 @@ const genreIcons = {
     '宫斗': '👑'
 };
 
+let checkedInLocationIds = [];
+let currentSelectedGenres = [];
+let currentRoute = null;
+let allLocationsCache = [];
+
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initFilters();
+    initRoutePage();
+    initLocationGenreFilter();
     loadHomePage();
     loadGenres();
     loadYears();
     loadDistricts();
+    loadCheckInStats();
+    loadStartLocationOptions();
+    loadSavedPreferences();
 });
 
 function initNavigation() {
@@ -139,6 +149,13 @@ function navigateTo(pageName, addToHistory = true) {
             break;
         case 'locations':
             loadLocations();
+            loadCheckInStats();
+            break;
+        case 'route':
+            loadCheckInStats();
+            break;
+        case 'checkins':
+            loadCheckIns();
             break;
     }
 
@@ -575,29 +592,37 @@ async function loadLocations() {
 function createLocationCard(location) {
     const dramaCount = location.dramas ? location.dramas.length : 0;
     const imageUrl = `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodeURIComponent(location.image)}&image_size=landscape_16_9`;
+    const isCheckedIn = checkedInLocationIds.includes(location.id);
+    const eggCount = location.easterEggs ? location.easterEggs.length : 0;
 
     return `
         <div class="location-card" data-id="${location.id}">
             <div class="location-image">
                 <img src="${imageUrl}" alt="${location.name}" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=location-icon>📍</span>';">
                 <div class="location-district-badge">${location.district}</div>
+                ${isCheckedIn ? '<div class="checked-badge">✅ 已打卡</div>' : ''}
+                ${eggCount > 0 ? `<div class="egg-badge">🥚 ${eggCount}彩蛋</div>` : ''}
             </div>
             <div class="location-info">
                 <h3 class="location-name">${location.name}</h3>
                 <p class="location-english">${location.englishName}</p>
+                <div class="location-tags">
+                    ${(location.tags || []).map(t => `<span class="location-tag-mini">${genreIcons[t] || '📺'} ${t}</span>`).join('')}
+                </div>
                 <p class="location-desc">${location.description}</p>
                 <div class="location-footer">
                     <span class="location-drama-count">🎬 ${dramaCount}部剧集</span>
-                    <span class="location-coords">📐 ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}</span>
+                    <span class="location-coords">⏱️ ${location.visitDuration || 60}分钟</span>
                 </div>
             </div>
         </div>
     `;
 }
 
-function renderMapMarkers(locations) {
-    const mapContainer = document.getElementById('hk-map');
-    const existingMarkers = mapContainer.querySelectorAll('.map-marker');
+function renderMapMarkers(locations, mapId = 'hk-map', routeStops = null) {
+    const mapContainer = document.getElementById(mapId);
+    if (!mapContainer) return;
+    const existingMarkers = mapContainer.querySelectorAll('.map-marker, .route-marker, .route-line');
     existingMarkers.forEach(m => m.remove());
 
     const latMin = 22.15;
@@ -605,16 +630,49 @@ function renderMapMarkers(locations) {
     const lngMin = 113.85;
     const lngMax = 114.40;
 
+    if (routeStops && routeStops.length > 1) {
+        const points = routeStops.map(s => ({
+            x: ((s.location.longitude - lngMin) / (lngMax - lngMin)) * 100,
+            y: ((latMax - s.location.latitude) / (latMax - latMin)) * 100
+        }));
+
+        for (let i = 0; i < points.length - 1; i++) {
+            const line = document.createElement('div');
+            line.className = 'route-line';
+
+            const dx = points[i + 1].x - points[i].x;
+            const dy = points[i + 1].y - points[i].y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+            line.style.left = `${points[i].x}%`;
+            line.style.top = `${points[i].y}%`;
+            line.style.width = `${length}%`;
+            line.style.transform = `rotate(${angle}deg)`;
+
+            mapContainer.appendChild(line);
+        }
+    }
+
     locations.forEach(location => {
         const x = ((location.longitude - lngMin) / (lngMax - lngMin)) * 100;
         const y = ((latMax - location.latitude) / (latMax - latMin)) * 100;
 
         const marker = document.createElement('div');
-        marker.className = 'map-marker';
+        const isRoute = routeStops && routeStops.some(s => s.location.id === location.id);
+        const routeOrder = routeStops ? routeStops.findIndex(s => s.location.id === location.id) : -1;
+        const isCheckedIn = checkedInLocationIds.includes(location.id);
+
+        marker.className = `map-marker ${isRoute ? 'route-marker' : ''} ${isCheckedIn ? 'checked-marker' : ''}`;
         marker.style.left = `${x}%`;
         marker.style.top = `${y}%`;
         marker.dataset.id = location.id;
-        marker.innerHTML = `<span>📍</span><div class="map-marker-tooltip">${location.name}</div>`;
+
+        const markerContent = isRoute && routeOrder >= 0
+            ? `<span class="route-marker-num">${routeOrder + 1}</span>`
+            : `<span>${isCheckedIn ? '✅' : '📍'}</span>`;
+
+        marker.innerHTML = `${markerContent}<div class="map-marker-tooltip">${location.name}</div>`;
 
         marker.addEventListener('click', () => {
             showLocationDetail(location.id);
@@ -634,19 +692,33 @@ async function showLocationDetail(id) {
     }
 
     const imageUrl = `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodeURIComponent(location.image)}&image_size=landscape_16_9`;
+    const isCheckedIn = checkedInLocationIds.includes(location.id);
+    const eggCount = location.easterEggs ? location.easterEggs.length : 0;
 
     container.innerHTML = `
         <div class="location-detail-header">
             <div class="location-detail-image">
                 <img src="${imageUrl}" alt="${location.name}" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=location-detail-icon>📍</span>';">
+                ${isCheckedIn ? '<div class="detail-checked-overlay">✅ 已完成打卡</div>' : ''}
             </div>
             <div class="location-detail-info">
                 <h2>${location.name}</h2>
                 <p class="location-detail-english">${location.englishName}</p>
                 <div class="location-detail-meta">
                     <span>🗺️ ${location.district}</span>
-                    <span>📐 纬度: ${location.latitude.toFixed(4)}</span>
-                    <span>📐 经度: ${location.longitude.toFixed(4)}</span>
+                    <span>📐 ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}</span>
+                    <span>⏱️ 建议停留 ${location.visitDuration || 60} 分钟</span>
+                </div>
+                <div class="location-tags">
+                    ${(location.tags || []).map(t => `<span class="genre-tag">${genreIcons[t] || '📺'} ${t}</span>`).join('')}
+                </div>
+                <div class="detail-action-buttons">
+                    <button class="checkin-btn ${isCheckedIn ? 'checked' : ''}" id="detail-checkin-btn" data-location-id="${location.id}">
+                        <span>${isCheckedIn ? '✅ 取消打卡' : '📸 立即打卡'}</span>
+                    </button>
+                    <button class="route-attach-btn" onclick="navigateTo('route')">
+                        <span>🗺️ 加入朝圣路线</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -673,6 +745,25 @@ async function showLocationDetail(id) {
                 `).join('')}
             </div>
         </div>
+
+        ${eggCount > 0 ? `
+        <div class="detail-section easter-egg-section">
+            <h3>🥚 隐藏彩蛋点 (${eggCount})</h3>
+            <p class="egg-hint-text">💡 按照以下提示探索，发现剧中的小秘密！</p>
+            <div class="easter-eggs-list">
+                ${location.easterEggs.map(egg => `
+                    <div class="egg-item">
+                        <div class="egg-icon">🥚</div>
+                        <div class="egg-content">
+                            <div class="egg-name">${egg.name}</div>
+                            <div class="egg-desc">${egg.description}</div>
+                            <div class="egg-hint">💡 ${egg.hint}</div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        ` : ''}
     `;
 
     container.querySelectorAll('.scene-card').forEach(card => {
@@ -682,9 +773,469 @@ async function showLocationDetail(id) {
         });
     });
 
+    const checkinBtn = document.getElementById('detail-checkin-btn');
+    if (checkinBtn) {
+        checkinBtn.addEventListener('click', () => {
+            toggleCheckIn(location.id, checkinBtn);
+        });
+    }
+
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('location-detail-page').classList.add('active');
     pageHistory.push(currentPage);
     currentPage = 'location-detail';
     window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function loadCheckInStats() {
+    const checkIns = await apiCall('/checkins');
+    const locations = await apiCall('/locations');
+
+    if (checkIns) {
+        checkedInLocationIds = checkIns.map(c => c.locationId);
+    }
+
+    const locationTotal = locations ? locations.length : 0;
+    const checkInCount = checkedInLocationIds.length;
+    const progress = locationTotal > 0 ? Math.round((checkInCount / locationTotal) * 100) : 0;
+
+    const checkInCountEl = document.getElementById('checkin-count');
+    const locationTotalEl = document.getElementById('location-total');
+    const checkInProgressEl = document.getElementById('checkin-progress');
+
+    if (checkInCountEl) checkInCountEl.textContent = checkInCount;
+    if (locationTotalEl) locationTotalEl.textContent = locationTotal;
+    if (checkInProgressEl) checkInProgressEl.textContent = `${progress}%`;
+
+    if (currentPage === 'locations') {
+        loadLocations();
+    }
+}
+
+async function initLocationGenreFilter() {
+    const genres = await apiCall('/genres');
+    const select = document.getElementById('location-genre-select');
+    if (!select) return;
+
+    if (genres) {
+        genres.forEach(genre => {
+            const option = document.createElement('option');
+            option.value = genre;
+            option.textContent = `${genreIcons[genre] || '📺'} ${genre}`;
+            select.appendChild(option);
+        });
+    }
+
+    select.addEventListener('change', loadLocations);
+}
+
+const originalLoadLocations = loadLocations;
+loadLocations = async function() {
+    const search = document.getElementById('location-search').value;
+    const district = document.getElementById('district-select').value;
+    const genre = document.getElementById('location-genre-select').value;
+
+    const container = document.getElementById('locations-list');
+    const loading = document.getElementById('locations-loading');
+    const empty = document.getElementById('locations-empty');
+
+    loading.style.display = 'block';
+    container.innerHTML = '';
+    empty.style.display = 'none';
+
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (district) params.append('district', district);
+
+    const locations = await apiCall(`/locations?${params.toString()}`);
+
+    loading.style.display = 'none';
+
+    if (!locations || locations.length === 0) {
+        empty.style.display = 'block';
+        renderMapMarkers([]);
+        return;
+    }
+
+    let filtered = locations;
+    if (genre) {
+        filtered = locations.filter(l => l.tags && l.tags.includes(genre));
+    }
+
+    if (filtered.length === 0) {
+        empty.style.display = 'block';
+        renderMapMarkers([]);
+        return;
+    }
+
+    allLocationsCache = filtered;
+
+    container.innerHTML = filtered.map(location => createLocationCard(location)).join('');
+
+    container.querySelectorAll('.location-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const id = parseInt(card.dataset.id);
+            showLocationDetail(id);
+        });
+    });
+
+    renderMapMarkers(filtered);
+};
+
+async function toggleCheckIn(locationId, buttonEl) {
+    const existingIndex = checkedInLocationIds.indexOf(locationId);
+
+    if (existingIndex >= 0) {
+        const checkIns = await apiCall('/checkins');
+        const checkIn = checkIns.find(c => c.locationId === locationId);
+        if (checkIn) {
+            await fetch(`${API_BASE}/checkins/${checkIn.id}`, { method: 'DELETE' });
+            checkedInLocationIds.splice(existingIndex, 1);
+        }
+    } else {
+        const response = await fetch(`${API_BASE}/checkins`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ locationId })
+        });
+        if (response.ok) {
+            checkedInLocationIds.push(locationId);
+            showCheckInSuccess();
+        }
+    }
+
+    loadCheckInStats();
+    if (buttonEl) {
+        const isChecked = checkedInLocationIds.includes(locationId);
+        buttonEl.classList.toggle('checked', isChecked);
+        buttonEl.querySelector('span').textContent = isChecked ? '✅ 取消打卡' : '📸 立即打卡';
+        const overlay = document.querySelector('.detail-checked-overlay');
+        if (overlay) {
+            overlay.style.display = isChecked ? 'flex' : 'none';
+        }
+    }
+}
+
+function showCheckInSuccess() {
+    const toast = document.createElement('div');
+    toast.className = 'toast-success';
+    toast.innerHTML = '🎉 打卡成功！';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 2000);
+}
+
+async function loadStartLocationOptions() {
+    const locations = await apiCall('/locations');
+    const select = document.getElementById('start-location-select');
+    if (!select || !locations) return;
+
+    locations.forEach(loc => {
+        const option = document.createElement('option');
+        option.value = loc.id;
+        option.textContent = `📍 ${loc.name} (${loc.district})`;
+        select.appendChild(option);
+    });
+}
+
+async function loadSavedPreferences() {
+    const prefs = await apiCall('/preferences');
+    if (!prefs) return;
+
+    if (prefs.favoriteGenres && prefs.favoriteGenres.length > 0) {
+        currentSelectedGenres = [...prefs.favoriteGenres];
+        updatePreferenceGenreUI();
+    }
+}
+
+function updatePreferenceGenreUI() {
+    document.querySelectorAll('.genre-tag-preference').forEach(tag => {
+        const genre = tag.dataset.genre;
+        tag.classList.toggle('active', currentSelectedGenres.includes(genre));
+    });
+}
+
+function initRoutePage() {
+    document.querySelectorAll('.genre-tag-preference').forEach(tag => {
+        tag.addEventListener('click', () => {
+            const genre = tag.dataset.genre;
+            const index = currentSelectedGenres.indexOf(genre);
+            if (index >= 0) {
+                currentSelectedGenres.splice(index, 1);
+            } else {
+                currentSelectedGenres.push(genre);
+            }
+            updatePreferenceGenreUI();
+        });
+    });
+
+    const generateBtn = document.getElementById('generate-route-btn');
+    if (generateBtn) {
+        generateBtn.addEventListener('click', generateRoute);
+    }
+
+    const regenerateBtn = document.getElementById('regenerate-route-btn');
+    if (regenerateBtn) {
+        regenerateBtn.addEventListener('click', generateRoute);
+    }
+
+    const savePrefsBtn = document.getElementById('save-preferences-btn');
+    if (savePrefsBtn) {
+        savePrefsBtn.addEventListener('click', savePreferences);
+    }
+}
+
+async function generateRoute() {
+    const loading = document.getElementById('route-loading');
+    const resultContainer = document.getElementById('route-result-container');
+
+    if (loading) loading.style.display = 'block';
+    if (resultContainer) resultContainer.style.display = 'none';
+
+    const startLocationId = document.getElementById('start-location-select').value;
+    const maxStops = parseInt(document.getElementById('max-stops-select').value);
+    const includeEasterEggs = document.getElementById('include-easter-eggs').checked;
+
+    await new Promise(r => setTimeout(r, 1500));
+
+    try {
+        const response = await fetch(`${API_BASE}/route/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                preferredGenres: currentSelectedGenres,
+                startLocationId: startLocationId ? parseInt(startLocationId) : null,
+                maxStops,
+                includeEasterEggs
+            })
+        });
+
+        if (!response.ok) throw new Error('路线生成失败');
+        const route = await response.json();
+        currentRoute = route;
+        renderRouteResult(route);
+    } catch (error) {
+        console.error('路线生成失败:', error);
+        alert('路线生成失败，请重试');
+    } finally {
+        if (loading) loading.style.display = 'none';
+    }
+}
+
+function renderRouteResult(route) {
+    const resultContainer = document.getElementById('route-result-container');
+    if (!resultContainer) return;
+
+    resultContainer.style.display = 'block';
+
+    document.getElementById('generated-route-name').textContent = route.name;
+    document.getElementById('generated-route-desc').textContent = route.description;
+    document.getElementById('route-stop-count').textContent = route.stops.length;
+    document.getElementById('route-walk-time').textContent = formatMinutes(route.totalWalkTime);
+    document.getElementById('route-distance').textContent = (route.totalDistance / 1000).toFixed(1);
+    document.getElementById('route-total-time').textContent = formatMinutes(route.totalTime);
+    document.getElementById('route-egg-count').textContent = route.easterEggs.length;
+
+    const routeLocations = route.stops.map(s => s.location);
+    renderMapMarkers(routeLocations, 'route-map', route.stops);
+
+    renderRouteTimeline(route.stops);
+
+    const eggSection = document.getElementById('easter-eggs-section');
+    const eggGrid = document.getElementById('easter-eggs-grid');
+    if (route.easterEggs.length > 0) {
+        eggSection.style.display = 'block';
+        eggGrid.innerHTML = route.easterEggs.map(egg => `
+            <div class="easter-egg-card">
+                <div class="egg-card-header">
+                    <span class="egg-card-icon">🥚</span>
+                    <div class="egg-card-location">📍 ${egg.locationName}</div>
+                </div>
+                <h4 class="egg-card-name">${egg.name}</h4>
+                <p class="egg-card-desc">${egg.description}</p>
+                <div class="egg-card-hint">💡 ${egg.hint}</div>
+            </div>
+        `).join('');
+    } else {
+        eggSection.style.display = 'none';
+    }
+
+    resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderRouteTimeline(stops) {
+    const timeline = document.getElementById('route-timeline');
+    if (!timeline) return;
+
+    timeline.innerHTML = stops.map((stop, index) => {
+        const location = stop.location;
+        const isChecked = stop.checked;
+        const genresHtml = (stop.matchedGenres && stop.matchedGenres.length > 0)
+            ? stop.matchedGenres.map(g => `<span class="route-genre-tag">${genreIcons[g] || '📺'} ${g}</span>`).join('')
+            : (location.tags || []).slice(0, 3).map(t => `<span class="route-genre-tag muted">${genreIcons[t] || '📺'} ${t}</span>`).join('');
+
+        const dramasHtml = (location.scenes || []).slice(0, 2).map(scene => {
+            const dramaTitle = scene.dramaTitle || '经典港剧';
+            return `<div class="route-drama-item">🎬 《${dramaTitle}》</div>`;
+        }).join('');
+
+        const walkInfoHtml = index > 0 ? `
+            <div class="route-walk-info">
+                <span class="walk-arrow">↓</span>
+                <span class="walk-text">🚶 步行 ${stop.walkTimeFromPrevious} 分钟</span>
+                <span class="walk-dist">约 ${(stop.walkFromPrevious / 1000).toFixed(2)} 公里</span>
+            </div>
+        ` : '';
+
+        const eggCount = location.easterEggs ? location.easterEggs.length : 0;
+
+        return `
+            ${walkInfoHtml}
+            <div class="route-stop-card" data-location-id="${location.id}">
+                <div class="route-stop-order">${stop.order}</div>
+                <div class="route-stop-content">
+                    <div class="route-stop-header">
+                        <h4 class="route-stop-name">${location.name}</h4>
+                        ${isChecked ? '<span class="route-stop-checked">✅ 已打卡</span>' : '<span class="route-stop-new">🆕 新晋打卡</span>'}
+                    </div>
+                    <div class="route-stop-meta">
+                        <span class="route-stop-district">🗺️ ${location.district}</span>
+                        <span class="route-stop-duration">⏱️ 建议停留 ${location.visitDuration || 60} 分钟</span>
+                        ${eggCount > 0 ? `<span class="route-stop-eggs">🥚 ${eggCount}个彩蛋</span>` : ''}
+                    </div>
+                    <div class="route-stop-genres">${genresHtml}</div>
+                    <div class="route-stop-dramas">${dramasHtml}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    timeline.querySelectorAll('.route-stop-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const id = parseInt(card.dataset.locationId);
+            showLocationDetail(id);
+        });
+    });
+}
+
+async function savePreferences() {
+    try {
+        const response = await fetch(`${API_BASE}/preferences`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                favoriteGenres: currentSelectedGenres
+            })
+        });
+
+        if (response.ok) {
+            const toast = document.createElement('div');
+            toast.className = 'toast-success';
+            toast.innerHTML = '💾 偏好设置已保存！';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
+        }
+    } catch (error) {
+        console.error('保存偏好失败:', error);
+    }
+}
+
+function formatMinutes(totalMinutes) {
+    if (totalMinutes < 60) return `${totalMinutes}分钟`;
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    return mins > 0 ? `${hours}小时${mins}分` : `${hours}小时`;
+}
+
+async function loadCheckIns() {
+    const container = document.getElementById('checkins-list');
+    const empty = document.getElementById('checkins-empty');
+    if (!container) return;
+
+    const checkIns = await apiCall('/checkins');
+    const locations = await apiCall('/locations');
+
+    if (!checkIns || checkIns.length === 0) {
+        container.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+    }
+
+    empty.style.display = 'none';
+
+    container.innerHTML = `
+        <div class="checkins-stats-summary">
+            <div class="checkins-summary-item">
+                <span class="summary-icon">📊</span>
+                <div>
+                    <div class="summary-number">${checkIns.length}</div>
+                    <div class="summary-label">累计打卡次数</div>
+                </div>
+            </div>
+            <div class="checkins-summary-item">
+                <span class="summary-icon">⭐</span>
+                <div>
+                    <div class="summary-number">${checkIns.reduce((sum, c) => sum + (c.rating || 5), 0) / checkIns.length}</div>
+                    <div class="summary-label">平均评分</div>
+                </div>
+            </div>
+        </div>
+        <div class="checkins-grid">
+            ${checkIns.map(checkin => {
+                const location = locations ? locations.find(l => l.id === checkin.locationId) : null;
+                const checkDate = new Date(checkin.checkedAt);
+                const dateStr = `${checkDate.getFullYear()}-${String(checkDate.getMonth()+1).padStart(2,'0')}-${String(checkDate.getDate()).padStart(2,'0')}`;
+                return `
+                    <div class="checkin-card" data-location-id="${checkin.locationId}">
+                        ${location ? `
+                            <div class="checkin-card-image">
+                                <span class="checkin-icon">📍</span>
+                            </div>
+                        ` : ''}
+                        <div class="checkin-card-info">
+                            <div class="checkin-card-header">
+                                <h4 class="checkin-card-name">${checkin.locationName}</h4>
+                                <span class="checkin-card-date">📅 ${dateStr}</span>
+                            </div>
+                            <div class="checkin-card-rating">
+                                ${'⭐'.repeat(checkin.rating || 5)}
+                            </div>
+                            ${checkin.notes ? `<p class="checkin-card-notes">${checkin.notes}</p>` : ''}
+                            <button class="checkin-delete-btn" data-checkin-id="${checkin.id}">
+                                ❌ 删除记录
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+
+    container.querySelectorAll('.checkin-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            if (!e.target.closest('.checkin-delete-btn')) {
+                const id = parseInt(card.dataset.locationId);
+                showLocationDetail(id);
+            }
+        });
+    });
+
+    container.querySelectorAll('.checkin-delete-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const id = parseInt(btn.dataset.checkinId);
+            if (confirm('确定要删除这条打卡记录吗？')) {
+                await fetch(`${API_BASE}/checkins/${id}`, { method: 'DELETE' });
+                loadCheckInStats();
+                loadCheckIns();
+            }
+        });
+    });
 }

@@ -290,9 +290,327 @@ app.get('/api/stats', (req, res) => {
     actorCount: data.actors.length,
     quoteCount: data.quotes.length,
     genreCount: new Set(data.dramas.flatMap(d => d.genre)).size,
-    locationCount: (data.locations || []).length
+    locationCount: (data.locations || []).length,
+    checkInCount: (data.checkIns || []).length
   });
 });
+
+app.get('/api/checkins', (req, res) => {
+  const data = readData();
+  res.json(data.checkIns || []);
+});
+
+app.post('/api/checkins', (req, res) => {
+  const data = readData();
+  const { locationId, rating, notes } = req.body;
+
+  if (!locationId) {
+    return res.status(400).json({ error: '地点ID不能为空' });
+  }
+
+  const location = (data.locations || []).find(l => l.id === parseInt(locationId));
+  if (!location) {
+    return res.status(404).json({ error: '地点不存在' });
+  }
+
+  const existingCheckIn = (data.checkIns || []).find(c => c.locationId === parseInt(locationId));
+  if (existingCheckIn) {
+    return res.status(400).json({ error: '该地点已打卡' });
+  }
+
+  const newCheckIn = {
+    id: (data.checkIns || []).length > 0 ? Math.max(...data.checkIns.map(c => c.id)) + 1 : 1,
+    locationId: parseInt(locationId),
+    locationName: location.name,
+    rating: rating || 5,
+    notes: notes || '',
+    checkedAt: new Date().toISOString()
+  };
+
+  if (!data.checkIns) data.checkIns = [];
+  data.checkIns.push(newCheckIn);
+  writeData(data);
+  res.status(201).json(newCheckIn);
+});
+
+app.delete('/api/checkins/:id', (req, res) => {
+  const data = readData();
+  if (!data.checkIns) data.checkIns = [];
+  const index = data.checkIns.findIndex(c => c.id === parseInt(req.params.id));
+
+  if (index === -1) {
+    return res.status(404).json({ error: '打卡记录未找到' });
+  }
+
+  const deleted = data.checkIns.splice(index, 1);
+  writeData(data);
+  res.json(deleted[0]);
+});
+
+app.get('/api/preferences', (req, res) => {
+  const data = readData();
+  res.json(data.userPreferences || { favoriteGenres: [], avoidedLocations: [] });
+});
+
+app.post('/api/preferences', (req, res) => {
+  const data = readData();
+  const { favoriteGenres, avoidedLocations } = req.body;
+
+  if (!data.userPreferences) {
+    data.userPreferences = { favoriteGenres: [], avoidedLocations: [] };
+  }
+
+  if (favoriteGenres !== undefined) {
+    data.userPreferences.favoriteGenres = Array.isArray(favoriteGenres) ? favoriteGenres : [];
+  }
+  if (avoidedLocations !== undefined) {
+    data.userPreferences.avoidedLocations = Array.isArray(avoidedLocations) ? avoidedLocations : [];
+  }
+
+  writeData(data);
+  res.json(data.userPreferences);
+});
+
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const phi1 = lat1 * Math.PI / 180;
+  const phi2 = lat2 * Math.PI / 180;
+  const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+  const deltaLambda = (lon2 - lon1) * Math.PI / 180;
+
+  const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+    Math.cos(phi1) * Math.cos(phi2) *
+    Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
+}
+
+function estimateWalkingTime(distanceMeters) {
+  const walkingSpeed = 80;
+  const minutes = distanceMeters / walkingSpeed;
+  return Math.ceil(minutes);
+}
+
+app.post('/api/route/generate', (req, res) => {
+  const data = readData();
+  const { preferredGenres, startLocationId, maxStops, includeEasterEggs } = req.body;
+
+  const locations = data.locations || [];
+  const checkIns = data.checkIns || [];
+  const userPrefs = data.userPreferences || { favoriteGenres: [], avoidedLocations: [] };
+
+  const genres = preferredGenres && preferredGenres.length > 0
+    ? preferredGenres
+    : (userPrefs.favoriteGenres.length > 0 ? userPrefs.favoriteGenres : null);
+
+  const avoided = userPrefs.avoidedLocations || [];
+  const checkedInLocationIds = checkIns.map(c => c.locationId);
+  const maxLocations = maxStops || 5;
+
+  let availableLocations = locations.filter(l =>
+    !avoided.includes(l.id)
+  );
+
+  let scoredLocations = availableLocations.map(location => {
+    let score = 0;
+
+    if (genres && genres.length > 0 && location.tags) {
+      const matchedGenres = location.tags.filter(t => genres.includes(t));
+      score += matchedGenres.length * 10;
+
+      const dramaMatches = (location.scenes || []).filter(scene => {
+        const drama = data.dramas.find(d => d.id === scene.dramaId);
+        if (!drama) return false;
+        return drama.genre.some(g => genres.includes(g));
+      }).length;
+      score += dramaMatches * 5;
+    }
+
+    if (!checkedInLocationIds.includes(location.id)) {
+      score += 5;
+    } else {
+      score += 2;
+    }
+
+    const dramaRatingSum = (location.scenes || []).reduce((sum, scene) => {
+      const drama = data.dramas.find(d => d.id === scene.dramaId);
+      return sum + (drama ? drama.rating : 0);
+    }, 0);
+    score += dramaRatingSum;
+
+    if (includeEasterEggs && location.easterEggs && location.easterEggs.length > 0) {
+      score += location.easterEggs.length * 3;
+    }
+
+    return { location, score, checked: checkedInLocationIds.includes(location.id) };
+  });
+
+  scoredLocations.sort((a, b) => b.score - a.score);
+
+  let selectedLocations = [];
+  let startPoint = null;
+
+  if (startLocationId) {
+    const start = scoredLocations.find(s => s.location.id === parseInt(startLocationId));
+    if (start) {
+      startPoint = start.location;
+      selectedLocations.push(start);
+      scoredLocations = scoredLocations.filter(s => s.location.id !== parseInt(startLocationId));
+    }
+  }
+
+  if (!startPoint && scoredLocations.length > 0) {
+    startPoint = scoredLocations[0].location;
+    selectedLocations.push(scoredLocations[0]);
+    scoredLocations.shift();
+  }
+
+  while (selectedLocations.length < maxLocations && scoredLocations.length > 0 && startPoint) {
+    const lastLocation = selectedLocations[selectedLocations.length - 1].location;
+
+    const withDistance = scoredLocations.map(s => ({
+      ...s,
+      distance: haversineDistance(
+        lastLocation.latitude, lastLocation.longitude,
+        s.location.latitude, s.location.longitude
+      )
+    }));
+
+    withDistance.sort((a, b) => {
+      const scoreA = a.score - a.distance / 500;
+      const scoreB = b.score - b.distance / 500;
+      return scoreB - scoreA;
+    });
+
+    selectedLocations.push(withDistance[0]);
+    const bestId = withDistance[0].location.id;
+    scoredLocations = scoredLocations.filter(s => s.location.id !== bestId);
+  }
+
+  let totalDistance = 0;
+  let totalWalkTime = 0;
+  let totalVisitTime = 0;
+
+  const routeStops = selectedLocations.map((s, index) => {
+    const stop = {
+      order: index + 1,
+      location: s.location,
+      checked: s.checked,
+      score: s.score,
+      matchedGenres: genres && s.location.tags
+        ? s.location.tags.filter(t => genres.includes(t))
+        : [],
+      walkFromPrevious: null,
+      walkTimeFromPrevious: 0
+    };
+
+    if (index > 0) {
+      const prev = selectedLocations[index - 1].location;
+      const distance = haversineDistance(
+        prev.latitude, prev.longitude,
+        s.location.latitude, s.location.longitude
+      );
+      const walkTime = estimateWalkingTime(distance);
+      stop.walkFromPrevious = Math.round(distance);
+      stop.walkTimeFromPrevious = walkTime;
+      totalDistance += distance;
+      totalWalkTime += walkTime;
+    }
+
+    totalVisitTime += s.location.visitDuration || 60;
+
+    return stop;
+  });
+
+  const allEasterEggs = [];
+  if (includeEasterEggs !== false) {
+    selectedLocations.forEach(s => {
+      if (s.location.easterEggs && s.location.easterEggs.length > 0) {
+        s.location.easterEggs.forEach(egg => {
+          allEasterEggs.push({
+            ...egg,
+            locationId: s.location.id,
+            locationName: s.location.name
+          });
+        });
+      }
+    });
+  }
+
+  const route = {
+    id: Date.now(),
+    name: generateRouteName(genres, selectedLocations.length),
+    description: generateRouteDescription(genres, selectedLocations),
+    stops: routeStops,
+    totalDistance: Math.round(totalDistance),
+    totalWalkTime: totalWalkTime,
+    totalVisitTime: totalVisitTime,
+    totalTime: totalWalkTime + totalVisitTime,
+    easterEggs: allEasterEggs,
+    usedGenres: genres || [],
+    createdAt: new Date().toISOString()
+  };
+
+  res.json(route);
+});
+
+function generateRouteName(genres, stopCount) {
+  const prefixes = {
+    '警匪': '刑侦追凶',
+    '商战': '商界风云',
+    '武侠': '江湖豪情',
+    '古装': '古韵寻踪',
+    '爱情': '浪漫情怀',
+    '家庭': '阖家温情',
+    '喜剧': '欢乐爆笑',
+    '法律': '律政先锋',
+    '医疗': '妙手仁心',
+    '奇幻': '奇幻驱魔',
+    '动作': '热血动作'
+  };
+
+  let prefix = '港剧朝圣';
+  if (genres && genres.length > 0) {
+    const matchedPrefix = genres.find(g => prefixes[g]);
+    if (matchedPrefix) {
+      prefix = prefixes[matchedPrefix];
+    }
+  }
+
+  return `${prefix} · ${stopCount}站经典路线`;
+}
+
+function generateRouteDescription(genres, selectedLocations) {
+  const locationNames = selectedLocations.map(s => s.location.name).join('、');
+
+  let genreDesc = '';
+  if (genres && genres.length > 0) {
+    genreDesc = `精选${genres.join('、')}题材`;
+  } else {
+    genreDesc = '综合经典题材';
+  }
+
+  const checkedCount = selectedLocations.filter(s => s.checked).length;
+  let statusDesc = '';
+  if (checkedCount === 0) {
+    statusDesc = '全部为新晋打卡点';
+  } else if (checkedCount === selectedLocations.length) {
+    statusDesc = '重温经典打卡路线';
+  } else {
+    statusDesc = `含${checkedCount}个已打卡重温点`;
+  }
+
+  const dramaList = new Set();
+  selectedLocations.forEach(s => {
+    (s.location.scenes || []).forEach(scene => {
+      dramaList.add(`《${scene.dramaTitle || '经典港剧'}》`);
+    });
+  });
+  const dramasStr = Array.from(dramaList).slice(0, 4).join('、');
+
+  return `${genreDesc}的专属路线，串联${locationNames}。${statusDesc}，沿途覆盖${dramasStr}等经典剧集场景，附隐藏彩蛋点攻略。`;
+}
 
 app.post('/api/dramas', (req, res) => {
   const data = readData();
