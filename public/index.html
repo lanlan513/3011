@@ -49,6 +49,10 @@
                 <span class="nav-icon">💬</span>
                 <span class="nav-text">经典台词</span>
             </button>
+            <button class="nav-btn" data-page="locations">
+                <span class="nav-icon">📍</span>
+                <span class="nav-text">场景地图</span>
+            </button>
         </div>
     </nav>
 
@@ -70,6 +74,10 @@
                 <div class="stat-item">
                     <span class="stat-number" id="stat-genres">--</span>
                     <span class="stat-label">种题材类型</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="stat-locations">--</span>
+                    <span class="stat-label">个经典取景地</span>
                 </div>
             </div>
 
@@ -180,6 +188,45 @@
                 <div class="loading-spinner"></div>
                 <p>加载中...</p>
             </div>
+        </section>
+
+        <section id="locations-page" class="page">
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label class="filter-label">搜索地点</label>
+                    <input type="text" id="location-search" class="filter-input" placeholder="输入地点名称...">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">区域</label>
+                    <select id="district-select" class="filter-select">
+                        <option value="">全部区域</option>
+                    </select>
+                </div>
+                <button class="filter-btn" id="location-reset-btn">重置</button>
+            </div>
+
+            <div class="map-container">
+                <div class="hk-map" id="hk-map">
+                    <div class="map-label">📍 经典港剧取景地图</div>
+                    <div class="map-hint">点击地图上的标记或下方卡片查看详情</div>
+                </div>
+            </div>
+
+            <div class="locations-grid" id="locations-list"></div>
+
+            <div class="loading" id="locations-loading" style="display:none;">
+                <div class="loading-spinner"></div>
+                <p>加载中...</p>
+            </div>
+
+            <div class="empty-state" id="locations-empty" style="display:none;">
+                <p>📍 未找到相关取景地</p>
+            </div>
+        </section>
+
+        <section id="location-detail-page" class="page">
+            <button class="back-btn" onclick="goBack()">← 返回列表</button>
+            <div id="location-detail"></div>
         </section>
 
         <section id="drama-detail-page" class="page">

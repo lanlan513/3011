@@ -718,5 +718,227 @@
       "text": "医生的天职就是救死扶伤。",
       "character": "程至美"
     }
+  ],
+  "locations": [
+    {
+      "id": 1,
+      "name": "中环",
+      "englishName": "Central",
+      "district": "香港岛",
+      "latitude": 22.2819,
+      "longitude": 114.1585,
+      "description": "中环是香港的政治与商业中心，高耸的摩天大楼与繁华的街道构成了港剧商战题材的经典背景。《创世纪》《大时代》等剧集中的商界风云都在此展开。",
+      "image": "香港中环天际线，摩天大楼群，维多利亚港背景，复古港风街景",
+      "scenes": [
+        {
+          "dramaId": 8,
+          "description": "叶荣添在中环写字楼间穿梭，追逐梦想与野心的起点。",
+          "quoteId": 14
+        },
+        {
+          "dramaId": 1,
+          "description": "方展博在中环交易所注视股市起伏，感受人性的贪婪与恐惧。",
+          "quoteId": 3
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "太平山顶",
+      "englishName": "Victoria Peak",
+      "district": "香港岛",
+      "latitude": 22.2840,
+      "longitude": 114.1504,
+      "description": "太平山顶是香港的地标之一，可俯瞰整个维多利亚港。无数港剧的浪漫表白、情侣约会都在此取景，夜色中的万家灯火见证了太多动人故事。",
+      "image": "太平山顶俯瞰维多利亚港夜景，璀璨灯火，复古港风",
+      "scenes": [
+        {
+          "dramaId": 1,
+          "description": "方展博与阮梅在山顶看夜景，乱世中的温情时光。",
+          "quoteId": 1
+        },
+        {
+          "dramaId": 10,
+          "description": "况天佑与马小玲在山顶遥望香港，人鬼殊途却情深似海。",
+          "quoteId": 18
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "庙街",
+      "englishName": "Temple Street",
+      "district": "九龙",
+      "latitude": 22.3096,
+      "longitude": 114.1708,
+      "description": "庙街是香港最具市井气息的地方，夜市摊位、大排档、算命摊子构成了独特的风景线。许多描写草根阶层生活的港剧都在此取景。",
+      "image": "庙街夜市，霓虹灯牌，大排档，复古香港街景，人流涌动",
+      "scenes": [
+        {
+          "dramaId": 5,
+          "description": "韦小宝若在现代，庙街便是他如鱼得水的地方，市井江湖气息与他不谋而合。",
+          "quoteId": 9
+        },
+        {
+          "dramaId": 3,
+          "description": "张大勇与李忠义在庙街大排档边吃边查案，充满生活气息。",
+          "quoteId": 6
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "维多利亚港",
+      "englishName": "Victoria Harbour",
+      "district": "香港岛/九龙",
+      "latitude": 22.2943,
+      "longitude": 114.1733,
+      "description": "维多利亚港是香港的灵魂，两岸的灯火与海景是港剧中最常见的背景。无论是警匪追逐还是情侣漫步，维港的景色都令人难忘。",
+      "image": "维多利亚港海景，天星小轮，两岸灯火，黄昏时分",
+      "scenes": [
+        {
+          "dramaId": 6,
+          "description": "朱素娥与陈三元在维港边谈心事，女警之间的战友情深。",
+          "quoteId": 11
+        },
+        {
+          "dramaId": 7,
+          "description": "乔峰若见此海港壮阔，想必会生出江湖子弟的豪情。",
+          "quoteId": 12
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "兰桂坊",
+      "englishName": "Lan Kwai Fong",
+      "district": "香港岛",
+      "latitude": 22.2818,
+      "longitude": 114.1550,
+      "description": "兰桂坊是香港著名的夜生活街区，酒吧林立，霓虹闪烁。港剧中许多都市情感戏、职场社交场景都在此拍摄。",
+      "image": "兰桂坊夜景，霓虹灯，酒吧街，90年代复古风格",
+      "scenes": [
+        {
+          "dramaId": 11,
+          "description": "余在春与丁柔在兰桂坊小酌，法庭之外的情感碰撞。",
+          "quoteId": 19
+        },
+        {
+          "dramaId": 12,
+          "description": "程至美与唐姿礼下班后在兰桂坊放松，医生卸下白大褂的另一面。",
+          "quoteId": 20
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "铜锣湾",
+      "englishName": "Causeway Bay",
+      "district": "香港岛",
+      "latitude": 22.2799,
+      "longitude": 114.1815,
+      "description": "铜锣湾是香港最繁华的购物区之一，时代广场、崇光百货等地标常出现在港剧中。人潮涌动的街道是都市题材剧集的常见背景。",
+      "image": "铜锣湾街景，时代广场，霓虹灯牌，繁华商业街",
+      "scenes": [
+        {
+          "dramaId": 8,
+          "description": "许文彪在铜锣湾街头，思考人生的十字路口。",
+          "quoteId": 15
+        },
+        {
+          "dramaId": 6,
+          "description": "陈小生在铜锣湾逛街，寻找美食与爱情。",
+          "quoteId": 11
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "TVB电视城",
+      "englishName": "TVB City",
+      "district": "新界",
+      "latitude": 22.3029,
+      "longitude": 114.2590,
+      "description": "TVB电视城是香港无线电视的总部，无数经典港剧的诞生地。古装街、民初街等场景搭建承载了一代人的记忆。",
+      "image": "TVB古装街场景，中式古建筑，复古片场布景",
+      "scenes": [
+        {
+          "dramaId": 2,
+          "description": "郭靖与黄蓉在此演绎经典武侠爱情，成为无数人的青春记忆。",
+          "quoteId": 4
+        },
+        {
+          "dramaId": 7,
+          "description": "乔峰、段誉、虚竹三兄弟在此结拜，江湖豪情由此展开。",
+          "quoteId": 12
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "尖沙咀",
+      "englishName": "Tsim Sha Tsui",
+      "district": "九龙",
+      "latitude": 22.2952,
+      "longitude": 114.1724,
+      "description": "尖沙咀是九龙的核心地带，星光大道、海港城等地标闻名遐迩。港剧中许多约会、重逢的场景都在这片繁华之地上演。",
+      "image": "尖沙咀海滨，星光大道，香港文化中心，复古港风",
+      "scenes": [
+        {
+          "dramaId": 1,
+          "description": "丁蟹在尖沙咀街头游荡，偏执而疯狂的角色令人胆寒。",
+          "quoteId": 2
+        },
+        {
+          "dramaId": 10,
+          "description": "马小玲在尖沙咀捉妖驱魔，长腿与短裙成为一道风景线。",
+          "quoteId": 17
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "旺角",
+      "englishName": "Mong Kok",
+      "district": "九龙",
+      "latitude": 22.3193,
+      "longitude": 114.1705,
+      "description": "旺角是香港最具活力的地区之一，波鞋街、女人街、金鱼市场等地充满生活气息。警匪剧和都市剧常在此取景。",
+      "image": "旺角街景，霓虹灯牌，拥挤人群，90年代香港街头",
+      "scenes": [
+        {
+          "dramaId": 3,
+          "description": "张大勇带队在旺角追查线索，穿梭于人流之间。",
+          "quoteId": 6
+        },
+        {
+          "dramaId": 5,
+          "description": "韦小宝在旺角街头如鱼得水，花言巧语哄骗女孩子。",
+          "quoteId": 9
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "长洲岛",
+      "englishName": "Cheung Chau",
+      "district": "新界",
+      "latitude": 22.2080,
+      "longitude": 114.0276,
+      "description": "长洲岛是香港的离岛之一，保留着传统渔村风貌。港剧中常有角色来到这里散心、避难或寻找内心宁静的场景。",
+      "image": "长洲岛渔港，传统渔村，海滩，夕阳西下",
+      "scenes": [
+        {
+          "dramaId": 12,
+          "description": "程至美医生在长洲岛享受片刻宁静，思考生命的意义。",
+          "quoteId": 20
+        },
+        {
+          "dramaId": 2,
+          "description": "郭靖与黄蓉远离江湖喧嚣，在此过着神仙眷侣般的生活。",
+          "quoteId": 5
+        }
+      ]
+    }
   ]
 }

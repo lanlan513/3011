@@ -203,13 +203,94 @@ app.get('/api/years', (req, res) => {
   res.json(years);
 });
 
+app.get('/api/locations', (req, res) => {
+  const { search, dramaId, district } = req.query;
+  const data = readData();
+  let locations = data.locations || [];
+
+  if (search) {
+    const keyword = search.toLowerCase();
+    locations = locations.filter(l =>
+      l.name.toLowerCase().includes(keyword) ||
+      l.englishName.toLowerCase().includes(keyword) ||
+      l.description.toLowerCase().includes(keyword) ||
+      l.district.toLowerCase().includes(keyword)
+    );
+  }
+
+  if (district) {
+    locations = locations.filter(l => l.district.includes(district));
+  }
+
+  if (dramaId) {
+    const id = parseInt(dramaId);
+    locations = locations.filter(l => l.scenes.some(s => s.dramaId === id));
+  }
+
+  const result = locations.map(location => {
+    const dramas = location.scenes.map(scene => {
+      const drama = data.dramas.find(d => d.id === scene.dramaId);
+      const quote = scene.quoteId ? data.quotes.find(q => q.id === scene.quoteId) : null;
+      return {
+        dramaId: scene.dramaId,
+        dramaTitle: drama ? drama.title : '未知',
+        dramaYear: drama ? drama.year : null,
+        description: scene.description,
+        quote: quote ? {
+          id: quote.id,
+          text: quote.text,
+          character: quote.character
+        } : null
+      };
+    });
+
+    return { ...location, dramas };
+  });
+
+  res.json(result);
+});
+
+app.get('/api/locations/:id', (req, res) => {
+  const data = readData();
+  const location = (data.locations || []).find(l => l.id === parseInt(req.params.id));
+
+  if (!location) {
+    return res.status(404).json({ error: '地点未找到' });
+  }
+
+  const dramas = location.scenes.map(scene => {
+    const drama = data.dramas.find(d => d.id === scene.dramaId);
+    const quote = scene.quoteId ? data.quotes.find(q => q.id === scene.quoteId) : null;
+    return {
+      dramaId: scene.dramaId,
+      dramaTitle: drama ? drama.title : '未知',
+      dramaYear: drama ? drama.year : null,
+      description: scene.description,
+      quote: quote ? {
+        id: quote.id,
+        text: quote.text,
+        character: quote.character
+      } : null
+    };
+  });
+
+  res.json({ ...location, dramas });
+});
+
+app.get('/api/districts', (req, res) => {
+  const data = readData();
+  const districts = [...new Set((data.locations || []).map(l => l.district))].sort();
+  res.json(districts);
+});
+
 app.get('/api/stats', (req, res) => {
   const data = readData();
   res.json({
     dramaCount: data.dramas.length,
     actorCount: data.actors.length,
     quoteCount: data.quotes.length,
-    genreCount: new Set(data.dramas.flatMap(d => d.genre)).size
+    genreCount: new Set(data.dramas.flatMap(d => d.genre)).size,
+    locationCount: (data.locations || []).length
   });
 });
 

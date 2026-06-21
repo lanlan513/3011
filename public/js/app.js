@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadHomePage();
     loadGenres();
     loadYears();
+    loadDistricts();
 });
 
 function initNavigation() {
@@ -83,6 +84,24 @@ function initFilters() {
         clearTimeout(actorSearchTimeout);
         actorSearchTimeout = setTimeout(loadActors, 300);
     });
+
+    const locationSearch = document.getElementById('location-search');
+    const districtSelect = document.getElementById('district-select');
+    const locationResetBtn = document.getElementById('location-reset-btn');
+
+    let locationSearchTimeout;
+    locationSearch.addEventListener('input', () => {
+        clearTimeout(locationSearchTimeout);
+        locationSearchTimeout = setTimeout(loadLocations, 300);
+    });
+
+    districtSelect.addEventListener('change', loadLocations);
+
+    locationResetBtn.addEventListener('click', () => {
+        locationSearch.value = '';
+        districtSelect.value = '';
+        loadLocations();
+    });
 }
 
 function navigateTo(pageName, addToHistory = true) {
@@ -117,6 +136,9 @@ function navigateTo(pageName, addToHistory = true) {
             break;
         case 'quotes':
             loadQuotes();
+            break;
+        case 'locations':
+            loadLocations();
             break;
     }
 
@@ -154,6 +176,9 @@ async function loadHomePage() {
         animateNumber('stat-actors', stats.actorCount);
         animateNumber('stat-quotes', stats.quoteCount);
         animateNumber('stat-genres', stats.genreCount);
+        if (stats.locationCount) {
+            animateNumber('stat-locations', stats.locationCount);
+        }
     }
 
     if (randomQuote) {
@@ -493,4 +518,173 @@ async function loadQuotes() {
             </div>
         </div>
     `).join('');
+}
+
+async function loadDistricts() {
+    const districts = await apiCall('/districts');
+    const select = document.getElementById('district-select');
+
+    if (districts) {
+        districts.forEach(district => {
+            const option = document.createElement('option');
+            option.value = district;
+            option.textContent = district;
+            select.appendChild(option);
+        });
+    }
+}
+
+async function loadLocations() {
+    const search = document.getElementById('location-search').value;
+    const district = document.getElementById('district-select').value;
+
+    const container = document.getElementById('locations-list');
+    const loading = document.getElementById('locations-loading');
+    const empty = document.getElementById('locations-empty');
+
+    loading.style.display = 'block';
+    container.innerHTML = '';
+    empty.style.display = 'none';
+
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (district) params.append('district', district);
+
+    const locations = await apiCall(`/locations?${params.toString()}`);
+
+    loading.style.display = 'none';
+
+    if (!locations || locations.length === 0) {
+        empty.style.display = 'block';
+        renderMapMarkers([]);
+        return;
+    }
+
+    container.innerHTML = locations.map(location => createLocationCard(location)).join('');
+
+    container.querySelectorAll('.location-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const id = parseInt(card.dataset.id);
+            showLocationDetail(id);
+        });
+    });
+
+    renderMapMarkers(locations);
+}
+
+function createLocationCard(location) {
+    const dramaCount = location.dramas ? location.dramas.length : 0;
+    const imageUrl = `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodeURIComponent(location.image)}&image_size=landscape_16_9`;
+
+    return `
+        <div class="location-card" data-id="${location.id}">
+            <div class="location-image">
+                <img src="${imageUrl}" alt="${location.name}" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=location-icon>📍</span>';">
+                <div class="location-district-badge">${location.district}</div>
+            </div>
+            <div class="location-info">
+                <h3 class="location-name">${location.name}</h3>
+                <p class="location-english">${location.englishName}</p>
+                <p class="location-desc">${location.description}</p>
+                <div class="location-footer">
+                    <span class="location-drama-count">🎬 ${dramaCount}部剧集</span>
+                    <span class="location-coords">📐 ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderMapMarkers(locations) {
+    const mapContainer = document.getElementById('hk-map');
+    const existingMarkers = mapContainer.querySelectorAll('.map-marker');
+    existingMarkers.forEach(m => m.remove());
+
+    const latMin = 22.15;
+    const latMax = 22.40;
+    const lngMin = 113.85;
+    const lngMax = 114.40;
+
+    locations.forEach(location => {
+        const x = ((location.longitude - lngMin) / (lngMax - lngMin)) * 100;
+        const y = ((latMax - location.latitude) / (latMax - latMin)) * 100;
+
+        const marker = document.createElement('div');
+        marker.className = 'map-marker';
+        marker.style.left = `${x}%`;
+        marker.style.top = `${y}%`;
+        marker.dataset.id = location.id;
+        marker.innerHTML = `<span>📍</span><div class="map-marker-tooltip">${location.name}</div>`;
+
+        marker.addEventListener('click', () => {
+            showLocationDetail(location.id);
+        });
+
+        mapContainer.appendChild(marker);
+    });
+}
+
+async function showLocationDetail(id) {
+    const location = await apiCall(`/locations/${id}`);
+    const container = document.getElementById('location-detail');
+
+    if (!location) {
+        container.innerHTML = '<p>加载失败</p>';
+        return;
+    }
+
+    const imageUrl = `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodeURIComponent(location.image)}&image_size=landscape_16_9`;
+
+    container.innerHTML = `
+        <div class="location-detail-header">
+            <div class="location-detail-image">
+                <img src="${imageUrl}" alt="${location.name}" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=location-detail-icon>📍</span>';">
+            </div>
+            <div class="location-detail-info">
+                <h2>${location.name}</h2>
+                <p class="location-detail-english">${location.englishName}</p>
+                <div class="location-detail-meta">
+                    <span>🗺️ ${location.district}</span>
+                    <span>📐 纬度: ${location.latitude.toFixed(4)}</span>
+                    <span>📐 经度: ${location.longitude.toFixed(4)}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h3>📖 地点介绍</h3>
+            <p class="location-detail-desc">${location.description}</p>
+        </div>
+
+        <div class="detail-section">
+            <h3>🎬 相关剧集与经典场景</h3>
+            <div class="location-scenes">
+                ${location.dramas.map(scene => `
+                    <div class="scene-card" data-drama-id="${scene.dramaId}">
+                        <div class="scene-drama-title">《${scene.dramaTitle}》<span class="scene-drama-year">(${scene.dramaYear}年)</span></div>
+                        <div class="scene-description">${scene.description}</div>
+                        ${scene.quote ? `
+                        <div class="scene-quote">
+                            <p class="scene-quote-text">「${scene.quote.text}」</p>
+                            <span class="scene-quote-character">—— ${scene.quote.character}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+
+    container.querySelectorAll('.scene-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const dramaId = parseInt(card.dataset.dramaId);
+            showDramaDetail(dramaId);
+        });
+    });
+
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('location-detail-page').classList.add('active');
+    pageHistory.push(currentPage);
+    currentPage = 'location-detail';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
