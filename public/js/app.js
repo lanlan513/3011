@@ -1708,21 +1708,24 @@ async function loadCpRanking() {
         else if (cp.rank === 3) podiumData[2] = cp;
     });
 
-    const podiumOrder = [1, 0, 2];
     const podiumColors = ['#d4a84b', '#c0c0c0', '#cd7f32'];
     const podiumHeights = ['300px', '250px', '200px'];
     const podiumIcons = ['🥇', '🥈', '🥉'];
+    const podiumNames = ['金', '银', '铜'];
 
-    podium.innerHTML = podiumOrder.map((idx, pos) => {
+    const orderMap = [1, 0, 2];
+    podium.innerHTML = orderMap.map(idx => {
         const cp = podiumData[idx];
         if (!cp) return '';
         const color = podiumColors[idx];
         const height = podiumHeights[idx];
         const icon = podiumIcons[idx];
+        const medalName = podiumNames[idx];
 
         return `
             <div class="podium-item rank-${idx + 1}" data-id="${cp.id}">
-                ${cp.isNew ? '<div class="podium-new-tag">HOT</div>' : ''}
+                <div class="podium-medal-badge" style="background:${color};color:#1a1a2a;">${medalName}</div>
+                ${cp.isNew ? '<div class="podium-new-tag">🔥HOT</div>' : ''}
                 <div class="podium-avatar-wrap">
                     <div class="podium-avatar left">${cp.characters[0].charAt(0)}</div>
                     <div class="podium-heart">💕</div>
@@ -1730,11 +1733,12 @@ async function loadCpRanking() {
                 </div>
                 <div class="podium-name">${cp.name}</div>
                 <div class="podium-chars">${cp.characters.join(' ❤ ')}</div>
+                <div class="podium-actors">${cp.actors.join(' × ')}</div>
                 <div class="podium-stats">
                     <span>⭐ ${cp.rating ? cp.rating.toFixed(1) : '--'}</span>
-                    <span>🗳️ ${cp.totalVotes}</span>
+                    <span>🗳️ ${cp.totalVotes}票</span>
                 </div>
-                <div class="podium-base" style="height:${height};background:linear-gradient(180deg, ${color}44, ${color}22);border:2px solid ${color};">
+                <div class="podium-base" style="height:${height};background:linear-gradient(180deg, ${color}55, ${color}22);border:2px solid ${color};">
                     <div class="podium-rank-icon">${icon}</div>
                     <div class="podium-rank-num">第${idx + 1}名</div>
                 </div>
@@ -1744,27 +1748,43 @@ async function loadCpRanking() {
 
     list.innerHTML = rest.map(cp => {
         const trendIcon = cp.trend === 'up' ? '📈' : (cp.trend === 'down' ? '📉' : '➡️');
+        const trendText = cp.trend === 'up' ? '上升' : (cp.trend === 'down' ? '下降' : '持平');
+        const rankColors = ['#4a90d9', '#5a8ac9', '#6a84b9', '#7a7ea9', '#8a7899'];
+        const rankColor = rankColors[Math.min(cp.rank - 4, rankColors.length - 1)];
+        
         return `
             <div class="ranking-list-item" data-id="${cp.id}">
-                <div class="ranking-rank-num">${cp.rank}</div>
+                <div class="ranking-rank-num" style="background:linear-gradient(145deg, ${rankColor}, ${rankColor}88);color:#fff;">
+                    ${cp.rank}
+                </div>
                 <div class="ranking-item-info">
                     <div class="ranking-item-header">
                         <span class="ranking-item-name">${cp.name}</span>
-                        ${cp.isNew ? '<span class="ranking-new">NEW</span>' : ''}
-                        <span class="ranking-trend">${trendIcon}</span>
+                        ${cp.isNew ? '<span class="ranking-new">✨上新</span>' : ''}
+                        <span class="ranking-trend" title="${trendText}">${trendIcon} ${trendText}</span>
                     </div>
-                    <div class="ranking-item-chars">${cp.characters.join(' ❤ ')} · ${cp.actors.join('×')}</div>
+                    <div class="ranking-item-chars">
+                        <span class="chars-label">角色：</span>${cp.characters.join(' ❤ ')}
+                    </div>
+                    <div class="ranking-item-chars actors">
+                        <span class="chars-label">演员：</span>${cp.actors.join(' × ')}
+                    </div>
                     <div class="ranking-item-tags">
-                        ${(cp.tags || []).slice(0, 2).map(t => `<span class="ranking-tag">${t}</span>`).join('')}
                         <span class="ranking-status" style="color:${cp.statusColor || '#d4a84b'}">${cp.relationshipStatus || ''}</span>
+                        ${(cp.tags || []).slice(0, 2).map(t => `<span class="ranking-tag">#${t}</span>`).join('')}
                     </div>
                 </div>
                 <div class="ranking-item-score">
                     <div class="ranking-hot-score">🔥 ${cp.hotScore ? cp.hotScore.toFixed(0) : '--'}</div>
-                    <div class="ranking-votes">🗳️ ${cp.totalVotes}票</div>
-                    <div class="ranking-rating">⭐ ${cp.rating ? cp.rating.toFixed(1) : '--'}</div>
+                    <div class="ranking-score-label">热度值</div>
+                    <div class="ranking-score-row">
+                        <span>🗳️ ${cp.totalVotes}</span>
+                        <span>⭐ ${cp.rating ? cp.rating.toFixed(1) : '--'}</span>
+                    </div>
                 </div>
-                <button class="ranking-vote-btn" data-id="${cp.id}">投票</button>
+                <button class="ranking-vote-btn" data-id="${cp.id}">
+                    <span>💖</span> 投票
+                </button>
             </div>
         `;
     }).join('');

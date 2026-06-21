@@ -2283,6 +2283,13 @@
       "nickname": "测试用户",
       "comment": "YYDS",
       "votedAt": "2026-06-21T03:23:29.095Z"
+    },
+    {
+      "id": 2,
+      "coupleId": 6,
+      "nickname": "匿名粉丝",
+      "comment": "",
+      "votedAt": "2026-06-21T03:55:40.255Z"
     }
   ]
 }
