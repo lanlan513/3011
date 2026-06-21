@@ -1198,5 +1198,1091 @@
       "壹号皇庭",
       "妙手仁心"
     ]
-  }
+  },
+  "couples": [
+    {
+      "id": 1,
+      "name": "靖蓉恋",
+      "characters": [
+        "郭靖",
+        "黄蓉"
+      ],
+      "actors": [
+        "张智霖",
+        "朱茵"
+      ],
+      "poster": "武侠经典",
+      "description": "憨厚老实的郭靖与聪明伶俐的黄蓉，一个是耿直的傻小子，一个是鬼马的俏黄蓉，两人从相遇相知到相爱相守，携手闯荡江湖，成为武侠世界最经典的神仙眷侣。郭靖的正直与黄蓉的聪慧完美互补，他们的爱情跨越了门第与偏见，历经桃花岛、铁枪庙、襄阳城等重重考验，始终不离不弃。",
+      "relationshipStatus": "HE · 神仙眷侣",
+      "statusColor": "#3d8b3d",
+      "rating": 9.6,
+      "votes": 2847,
+      "tags": [
+        "武侠",
+        "青梅竹马",
+        "患难与共",
+        "家国情怀"
+      ],
+      "dramas": [
+        {
+          "dramaId": 2,
+          "title": "射雕英雄传",
+          "year": 1994,
+          "roleInStory": "主线CP",
+          "keyMoments": [
+            "比武招亲初遇",
+            "桃花岛求亲",
+            "华山论剑"
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "event": "初遇相逢",
+          "date": "第1集",
+          "description": "黄蓉扮作小乞丐与郭靖在张家口相遇，郭靖的真诚善良打动了黄蓉",
+          "type": "相遇"
+        },
+        {
+          "event": "女装惊艳",
+          "date": "第3集",
+          "description": "黄蓉在湖边以女装现身，郭靖被其美貌惊艳，两人感情迅速升温",
+          "type": "心动"
+        },
+        {
+          "event": "桃花岛求亲",
+          "date": "第12集",
+          "description": "郭靖上桃花岛向黄药师求亲，与欧阳克比试胜出",
+          "type": "关键节点"
+        },
+        {
+          "event": "铁枪庙真相",
+          "date": "第28集",
+          "description": "黄蓉在铁枪庙揭露杨康罪行，为江南五怪洗冤，展现过人智慧",
+          "type": "考验"
+        },
+        {
+          "event": "襄阳相守",
+          "date": "大结局",
+          "description": "郭靖黄蓉结为夫妻，携手守卫襄阳城，成就神雕侠侣传奇",
+          "type": "圆满"
+        }
+      ],
+      "relationshipEvolution": [
+        {
+          "stage": "初识",
+          "description": "萍水相逢 · 仗义相助",
+          "icon": "👋"
+        },
+        {
+          "stage": "相知",
+          "description": "心意相通 · 彼此欣赏",
+          "icon": "💬"
+        },
+        {
+          "stage": "相爱",
+          "description": "情定三生 · 海誓山盟",
+          "icon": "💗"
+        },
+        {
+          "stage": "相守",
+          "description": "历经磨难 · 终成眷属",
+          "icon": "👫"
+        },
+        {
+          "stage": "永恒",
+          "description": "侠之大者 · 为国为民",
+          "icon": "🏆"
+        }
+      ],
+      "classicScenes": [
+        {
+          "id": 1,
+          "title": "湖边初遇",
+          "episode": "第3集",
+          "description": "黄蓉一袭黄衫立于船头，郭靖看呆了。蓉儿一句'靖哥哥'叫碎了多少观众的心。",
+          "quoteId": 4,
+          "icon": "🚣"
+        },
+        {
+          "id": 2,
+          "title": "雪夜疗伤",
+          "episode": "第18集",
+          "description": "郭靖重伤，黄蓉不顾自身安危在雪地中为他运功疗伤，两人相拥取暖。",
+          "quoteId": 5,
+          "icon": "❄️"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "方阮恋",
+      "characters": [
+        "方展博",
+        "阮梅"
+      ],
+      "actors": [
+        "刘青云",
+        "周慧敏"
+      ],
+      "poster": "乱世爱情",
+      "description": "股坛奇才方展博与温柔贤惠的阮梅，在大时代的浪潮中相遇相爱。阮梅的深情守候与方展博的浪子回头，构成了90年代最令人揪心的爱情故事。大结局的悲伤结局，成为无数观众心中永远的意难平。",
+      "relationshipStatus": "BE · 催人泪下",
+      "statusColor": "#c41e3a",
+      "rating": 9.5,
+      "votes": 3102,
+      "tags": [
+        "商战",
+        "虐恋",
+        "青梅竹马",
+        "意难平"
+      ],
+      "dramas": [
+        {
+          "dramaId": 1,
+          "title": "大时代",
+          "year": 1992,
+          "roleInStory": "主线CP",
+          "keyMoments": [
+            "台湾重逢",
+            "山顶看夜景",
+            "大结局离别"
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "event": "青梅竹马",
+          "date": "第2集",
+          "description": "方展博与阮梅从小相识，阮梅一直默默暗恋着这个放荡不羁的男孩",
+          "type": "相遇"
+        },
+        {
+          "event": "家破人亡",
+          "date": "第8集",
+          "description": "方家惨遭丁蟹迫害，方展博远走台湾，阮梅不离不弃追随",
+          "type": "考验"
+        },
+        {
+          "event": "台湾重逢",
+          "date": "第20集",
+          "description": "两人在台湾重逢，阮梅悉心照料落魄的展博，感情逐渐明朗",
+          "type": "心动"
+        },
+        {
+          "event": "真情告白",
+          "date": "第32集",
+          "description": "方展博在山顶向阮梅表白，承诺给她一个幸福的未来",
+          "type": "关键节点"
+        },
+        {
+          "event": "永失吾爱",
+          "date": "大结局",
+          "description": "大仇得报之日，阮梅却在展博怀中永远闭上了眼睛，成为永恒的遗憾",
+          "type": "虐心"
+        }
+      ],
+      "relationshipEvolution": [
+        {
+          "stage": "相识",
+          "description": "邻家女孩 · 默默守护",
+          "icon": "🏠"
+        },
+        {
+          "stage": "分离",
+          "description": "天各一方 · 思念成疾",
+          "icon": "💔"
+        },
+        {
+          "stage": "重逢",
+          "description": "患难与共 · 渐生情愫",
+          "icon": "💫"
+        },
+        {
+          "stage": "相守",
+          "description": "苦尽甘来 · 终成眷属",
+          "icon": "💗"
+        },
+        {
+          "stage": "永别",
+          "description": "命运弄人 · 天人永隔",
+          "icon": "😢"
+        }
+      ],
+      "classicScenes": [
+        {
+          "id": 1,
+          "title": "山顶定情",
+          "episode": "第32集",
+          "description": "太平山顶万家灯火，展博握紧阮梅的手，许下一生的承诺。",
+          "quoteId": 1,
+          "icon": "🌃"
+        },
+        {
+          "id": 2,
+          "title": "大结局离别",
+          "episode": "第40集",
+          "description": "阮梅在展博怀中安然离去，背景音乐响起的瞬间，无数观众泪崩。",
+          "quoteId": 3,
+          "icon": "😢"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "勇婕同心",
+      "characters": [
+        "张大勇",
+        "高婕"
+      ],
+      "actors": [
+        "陶大宇",
+        "郭可盈"
+      ],
+      "poster": "刑侦情侣",
+      "description": "警队精英张大勇与记者高婕，在一宗宗离奇案件中相遇相爱。智勇双全的阿勇与聪慧美丽的高婕，他们的爱情在惊心动魄的探案过程中不断升温，分分合合牵动着每一位观众的心。",
+      "relationshipStatus": "HE · 终成眷属",
+      "statusColor": "#3d8b3d",
+      "rating": 9.4,
+      "votes": 2678,
+      "tags": [
+        "警匪",
+        "探案情侣",
+        "欢喜冤家",
+        "分分合合"
+      ],
+      "dramas": [
+        {
+          "dramaId": 3,
+          "title": "刑事侦缉档案",
+          "year": 1995,
+          "roleInStory": "主线CP",
+          "keyMoments": [
+            "首遇查案",
+            "互生情愫",
+            "破镜重圆"
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "event": "初次相遇",
+          "date": "第1集",
+          "description": "高婕为采访案件与张大勇发生争执，两人不打不相识",
+          "type": "相遇"
+        },
+        {
+          "event": "并肩作战",
+          "date": "第5集",
+          "description": "高婕遇险，张大勇奋不顾身相救，两人关系开始缓和",
+          "type": "心动"
+        },
+        {
+          "event": "确认关系",
+          "date": "第12集",
+          "description": "案件告破后，两人在天台敞开心扉，正式确立恋爱关系",
+          "type": "关键节点"
+        },
+        {
+          "event": "误会分手",
+          "date": "第18集",
+          "description": "因案件中出现的误会，两人产生隔阂，黯然分手",
+          "type": "考验"
+        },
+        {
+          "event": "破镜重圆",
+          "date": "大结局",
+          "description": "经历生死考验后，两人终于解除误会，携手走向未来",
+          "type": "圆满"
+        }
+      ],
+      "relationshipEvolution": [
+        {
+          "stage": "初遇",
+          "description": "欢喜冤家 · 针锋相对",
+          "icon": "⚔️"
+        },
+        {
+          "stage": "好感",
+          "description": "患难见真情 · 渐生好感",
+          "icon": "🌱"
+        },
+        {
+          "stage": "热恋",
+          "description": "情投意合 · 甜蜜时光",
+          "icon": "💗"
+        },
+        {
+          "stage": "分歧",
+          "description": "误会重重 · 分道扬镳",
+          "icon": "💔"
+        },
+        {
+          "stage": "复合",
+          "description": "破镜重圆 · 永结同心",
+          "icon": "💍"
+        }
+      ],
+      "classicScenes": [
+        {
+          "id": 1,
+          "title": "天台告白",
+          "episode": "第12集",
+          "description": "案件告破的夜晚，大勇和高婕在警署天台，大勇终于说出心里话。",
+          "quoteId": 6,
+          "icon": "🌙"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "况马驱魔恋",
+      "characters": [
+        "况天佑",
+        "马小玲"
+      ],
+      "actors": [
+        "尹天照",
+        "万绮雯"
+      ],
+      "poster": "奇幻虐恋",
+      "description": "不老不死的僵尸况天佑与驱魔龙族传人马小玲，跨越六十年的宿命纠葛。人鬼殊途的禁忌之恋，马家女人不能为男人流泪的诅咒，让这段感情充满了悲剧色彩，却又美得令人心碎。",
+      "relationshipStatus": "HE · 破咒相守",
+      "statusColor": "#d4a84b",
+      "rating": 9.3,
+      "votes": 2956,
+      "tags": [
+        "奇幻",
+        "僵尸驱魔",
+        "宿命感",
+        "禁忌之恋"
+      ],
+      "dramas": [
+        {
+          "dramaId": 10,
+          "title": "我和僵尸有个约会",
+          "year": 1998,
+          "roleInStory": "主线CP",
+          "keyMoments": [
+            "酒吧相遇",
+            "同居室友",
+            "打破诅咒"
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "event": "宿命相遇",
+          "date": "第1集",
+          "description": "在Wait Bar酒吧，马小玲一眼认出况天佑的僵尸身份，两人命运从此纠缠",
+          "type": "相遇"
+        },
+        {
+          "event": "被迫同居",
+          "date": "第5集",
+          "description": "因种种机缘巧合，马小玲与况天佑成为室友，日常斗嘴爆笑不断",
+          "type": "心动"
+        },
+        {
+          "event": "舍身相救",
+          "date": "第15集",
+          "description": "况天佑为救马小玲不顾暴露身份，马小玲也为他打破祖训流下眼泪",
+          "type": "关键节点"
+        },
+        {
+          "event": "诅咒真相",
+          "date": "第28集",
+          "description": "马家女人不能流泪的诅咒真相揭开，原来流泪会失去法力",
+          "type": "考验"
+        },
+        {
+          "event": "打破宿命",
+          "date": "大结局",
+          "description": "两人合力击败将臣，马小玲的诅咒终于被打破，有情人终成眷属",
+          "type": "圆满"
+        }
+      ],
+      "relationshipEvolution": [
+        {
+          "stage": "对立",
+          "description": "驱魔传人与僵尸 · 宿命之敌",
+          "icon": "👹"
+        },
+        {
+          "stage": "了解",
+          "description": "同屋共住 · 发现真心",
+          "icon": "🏠"
+        },
+        {
+          "stage": "动情",
+          "description": "禁忌之恋 · 冲破束缚",
+          "icon": "💗"
+        },
+        {
+          "stage": "挣扎",
+          "description": "诅咒作祟 · 泪与痛的抉择",
+          "icon": "😭"
+        },
+        {
+          "stage": "相守",
+          "description": "打破宿命 · 天长地久",
+          "icon": "🕊️"
+        }
+      ],
+      "classicScenes": [
+        {
+          "id": 1,
+          "title": "驱魔咒语",
+          "episode": "第1集",
+          "description": "马小玲首次施展九字真言，长腿短裙的造型惊艳全场，况天佑看得目瞪口呆。",
+          "quoteId": 17,
+          "icon": "⚡"
+        },
+        {
+          "id": 2,
+          "title": "诅咒之泪",
+          "episode": "第28集",
+          "description": "马小玲为况天佑流下眼泪，那句'马家的女人不能为男人流泪'成为经典。",
+          "quoteId": 18,
+          "icon": "💧"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "峰玉恋",
+      "characters": [
+        "乔峰",
+        "阿朱"
+      ],
+      "actors": [
+        "黄日华",
+        "刘锦玲"
+      ],
+      "poster": "悲情武侠",
+      "description": "盖世英雄乔峰与温婉聪慧的阿朱，在乔峰最落魄的时候相遇相爱。青石桥上的那一掌，成为武侠史上最虐心的名场面，塞上牛羊空许约的遗憾，让无数观众潸然泪下。",
+      "relationshipStatus": "BE · 千古遗憾",
+      "statusColor": "#c41e3a",
+      "rating": 9.7,
+      "votes": 3421,
+      "tags": [
+        "武侠",
+        "虐恋天花板",
+        "宿命悲剧",
+        "意难平"
+      ],
+      "dramas": [
+        {
+          "dramaId": 7,
+          "title": "天龙八部",
+          "year": 1997,
+          "roleInStory": "主线CP",
+          "keyMoments": [
+            "聚贤庄相救",
+            "雁门关定情",
+            "青石桥悲剧"
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "event": "初次相识",
+          "date": "第9集",
+          "description": "阿朱扮作乔峰模样救人，两人在少林寺外初次擦肩而过",
+          "type": "相遇"
+        },
+        {
+          "event": "聚贤庄救美",
+          "date": "第14集",
+          "description": "乔峰在聚贤庄群雄面前，奋不顾身救下重伤的阿朱，两人感情萌芽",
+          "type": "心动"
+        },
+        {
+          "event": "雁门关定情",
+          "date": "第18集",
+          "description": "阿朱在雁门关外等候五天五夜，两人终于互诉衷肠，相约塞外牧羊",
+          "type": "关键节点"
+        },
+        {
+          "event": "身份之谜",
+          "date": "第22集",
+          "description": "阿朱发现自己是段正淳之女，而乔峰认定的仇人正是她的父亲",
+          "type": "考验"
+        },
+        {
+          "event": "青石桥悲剧",
+          "date": "第24集",
+          "description": "阿朱易容代父受过，死于乔峰降龙十八掌之下，塞上牛羊空许约",
+          "type": "虐心"
+        }
+      ],
+      "relationshipEvolution": [
+        {
+          "stage": "仰慕",
+          "description": "江湖侠女 · 仰慕英雄",
+          "icon": "🌟"
+        },
+        {
+          "stage": "相救",
+          "description": "英雄救美 · 情愫暗生",
+          "icon": "🛡️"
+        },
+        {
+          "stage": "定情",
+          "description": "塞外盟誓 · 牧羊之约",
+          "icon": "🐑"
+        },
+        {
+          "stage": "抉择",
+          "description": "生父仇人 · 两难困境",
+          "icon": "⚖️"
+        },
+        {
+          "stage": "永别",
+          "description": "青石桥上 · 一掌成殇",
+          "icon": "💀"
+        }
+      ],
+      "classicScenes": [
+        {
+          "id": 1,
+          "title": "聚贤庄宣言",
+          "episode": "第14集",
+          "description": "乔峰一句'这个姑娘我保定了！'，单枪匹马对抗群雄，霸气十足。",
+          "quoteId": 12,
+          "icon": "⚔️"
+        },
+        {
+          "id": 2,
+          "title": "青石桥悲剧",
+          "episode": "第24集",
+          "description": "大雨滂沱的青石桥，乔峰一掌击中阿朱，发现真相后悲痛欲绝的画面。",
+          "icon": "🌧️"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "双小宝",
+      "characters": [
+        "韦小宝",
+        "双儿"
+      ],
+      "actors": [
+        "陈小春",
+        "陈少霞"
+      ],
+      "poster": "甜宠经典",
+      "description": "机灵鬼怪的韦小宝与温柔贤惠的双儿，是鹿鼎记中最受欢迎的一对。双儿始终不离不弃，既是韦小宝最得力的助手，也是他最信任的挚爱。陈小春与陈少霞的演绎，让这对CP成为经典。",
+      "relationshipStatus": "HE · 归隐江湖",
+      "statusColor": "#3d8b3d",
+      "rating": 9.2,
+      "votes": 2456,
+      "tags": [
+        "古装",
+        "甜宠",
+        "忠心护主",
+        "欢喜冤家"
+      ],
+      "dramas": [
+        {
+          "dramaId": 5,
+          "title": "鹿鼎记",
+          "year": 1998,
+          "roleInStory": "官配CP",
+          "keyMoments": [
+            "庄家报恩",
+            "多次相救",
+            "通吃岛隐居"
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "event": "庄家初遇",
+          "date": "第6集",
+          "description": "双儿为报韦小宝相救之恩，被庄三少奶奶赠予小宝服侍",
+          "type": "相遇"
+        },
+        {
+          "event": "舍命护主",
+          "date": "第12集",
+          "description": "多次危难之际，双儿挺身而出保护小宝，两人感情日渐深厚",
+          "type": "心动"
+        },
+        {
+          "event": "生死相随",
+          "date": "第25集",
+          "description": "小宝被天地会追杀，双儿不离不弃，生死与共",
+          "type": "关键节点"
+        },
+        {
+          "event": "通吃岛隐居",
+          "date": "第38集",
+          "description": "小宝带着七位夫人隐居通吃岛，双儿始终是他最钟爱的那一个",
+          "type": "圆满"
+        }
+      ],
+      "relationshipEvolution": [
+        {
+          "stage": "主仆",
+          "description": "忠心耿耿 · 贴身服侍",
+          "icon": "🙇"
+        },
+        {
+          "stage": "感激",
+          "description": "多次相救 · 恩重如山",
+          "icon": "💖"
+        },
+        {
+          "stage": "深情",
+          "description": "情根深种 · 生死相随",
+          "icon": "💗"
+        },
+        {
+          "stage": "挚爱",
+          "description": "三千弱水 · 只取一瓢",
+          "icon": "💍"
+        }
+      ],
+      "classicScenes": [
+        {
+          "id": 1,
+          "title": "凉风有信",
+          "episode": "第1集",
+          "description": "小宝出场的经典台词，后来成为他与双儿之间的甜蜜暗号。",
+          "quoteId": 9,
+          "icon": "🌙"
+        },
+        {
+          "id": 2,
+          "title": "双儿救夫",
+          "episode": "第18集",
+          "description": "双儿武艺高强，多次在危难时刻救下小宝，一句'桂公公'甜到心里。",
+          "quoteId": 10,
+          "icon": "🗡️"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "程唐医恋",
+      "characters": [
+        "程至美",
+        "唐姿礼"
+      ],
+      "actors": [
+        "吴启华",
+        "蔡少芬"
+      ],
+      "poster": "医护暖心",
+      "description": "仁爱医院的程至美医生与唐姿礼医生，在救死扶伤的日常中相知相爱。程医生的温柔体贴与Jackie的开朗活泼，是医院里最令人羡慕的一对。可惜天意弄人，Jackie的结局让人泪目。",
+      "relationshipStatus": "BE · 遗憾收场",
+      "statusColor": "#c41e3a",
+      "rating": 9.1,
+      "votes": 2234,
+      "tags": [
+        "医疗",
+        "职场恋爱",
+        "温柔治愈",
+        "意难平"
+      ],
+      "dramas": [
+        {
+          "dramaId": 12,
+          "title": "妙手仁心",
+          "year": 1998,
+          "roleInStory": "主线CP",
+          "keyMoments": [
+            "手术室合作",
+            "长洲岛散心",
+            "结局悲剧"
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "event": "同事初遇",
+          "date": "第1集",
+          "description": "程至美与唐姿礼在手术室初次合作，两人专业的表现互相欣赏",
+          "type": "相遇"
+        },
+        {
+          "event": "兰桂坊小酌",
+          "date": "第8集",
+          "description": "下班后在兰桂坊放松，卸下白大褂的两人发现了彼此的另一面",
+          "type": "心动"
+        },
+        {
+          "event": "长洲定情",
+          "date": "第16集",
+          "description": "在长洲岛的宁静时光，两人终于确认了彼此的心意",
+          "type": "关键节点"
+        },
+        {
+          "event": "确诊重病",
+          "date": "第28集",
+          "description": "Jackie被确诊患有绝症，两人面临最残酷的考验",
+          "type": "考验"
+        },
+        {
+          "event": "病房婚礼",
+          "date": "大结局",
+          "description": "程至美在病房与Jackie举行婚礼，含泪目送爱人离世",
+          "type": "虐心"
+        }
+      ],
+      "relationshipEvolution": [
+        {
+          "stage": "同事",
+          "description": "专业合作 · 互相敬重",
+          "icon": "🏥"
+        },
+        {
+          "stage": "朋友",
+          "description": "卸下防备 · 展现真我",
+          "icon": "☕"
+        },
+        {
+          "stage": "恋人",
+          "description": "情投意合 · 甜蜜时光",
+          "icon": "💗"
+        },
+        {
+          "stage": "磨难",
+          "description": "病魔缠身 · 不离不弃",
+          "icon": "💔"
+        },
+        {
+          "stage": "永别",
+          "description": "病房婚礼 · 天人永隔",
+          "icon": "😭"
+        }
+      ],
+      "classicScenes": [
+        {
+          "id": 1,
+          "title": "长洲看海",
+          "episode": "第16集",
+          "description": "两人在长洲东湾海滩并肩看海，程医生终于鼓起勇气牵起Jackie的手。",
+          "quoteId": 20,
+          "icon": "🌊"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "叶许兄弟",
+      "characters": [
+        "叶荣添",
+        "许文彪"
+      ],
+      "actors": [
+        "罗嘉良",
+        "陈锦鸿"
+      ],
+      "poster": "商战兄弟",
+      "description": "从一起打拼的好兄弟到反目成仇的宿敌，叶荣添与许文彪的关系变化是《创世纪》最震撼人心的主线。从兄弟情深到相爱相杀，两人的命运纠葛令人唏嘘不已。",
+      "relationshipStatus": "复杂 · 相爱相杀",
+      "statusColor": "#d4a84b",
+      "rating": 9.4,
+      "votes": 2789,
+      "tags": [
+        "商战",
+        "兄弟情",
+        "相爱相杀",
+        "命运纠葛"
+      ],
+      "dramas": [
+        {
+          "dramaId": 8,
+          "title": "创世纪",
+          "year": 1999,
+          "roleInStory": "双男主",
+          "keyMoments": [
+            "创业初期",
+            "理念分歧",
+            "最终对决"
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "event": "兄弟齐心",
+          "date": "第2集",
+          "description": "叶荣添、许文彪、马志强三兄弟创业初期，同甘共苦感情深厚",
+          "type": "相遇"
+        },
+        {
+          "event": "理念分歧",
+          "date": "第20集",
+          "description": "叶荣添的急功近利与许文彪的原则至上产生激烈冲突",
+          "type": "考验"
+        },
+        {
+          "event": "反目成仇",
+          "date": "第35集",
+          "description": "许文彪黑化，两人正式站在对立面，昔日兄弟变成商场宿敌",
+          "type": "关键节点"
+        },
+        {
+          "event": "最终对决",
+          "date": "第80集",
+          "description": "在地产商场的终极博弈中，两人做最后的了结",
+          "type": "考验"
+        },
+        {
+          "event": "回归初心",
+          "date": "大结局",
+          "description": "许文彪临终前幡然醒悟，叶荣添带着兄弟的遗愿继续前行",
+          "type": "复杂结局"
+        }
+      ],
+      "relationshipEvolution": [
+        {
+          "stage": "兄弟",
+          "description": "情同手足 · 共创未来",
+          "icon": "🤝"
+        },
+        {
+          "stage": "分歧",
+          "description": "理念不合 · 渐生嫌隙",
+          "icon": "⚡"
+        },
+        {
+          "stage": "对立",
+          "description": "反目成仇 · 商战对决",
+          "icon": "⚔️"
+        },
+        {
+          "stage": "和解",
+          "description": "临终释怀 · 兄弟情深",
+          "icon": "😢"
+        }
+      ],
+      "classicScenes": [
+        {
+          "id": 1,
+          "title": "天台兄弟情",
+          "episode": "第5集",
+          "description": "创业初期，三人在天台畅想未来，那段纯粹的兄弟时光令人怀念。",
+          "quoteId": 14,
+          "icon": "🏙️"
+        },
+        {
+          "id": 2,
+          "title": "决裂时刻",
+          "episode": "第35集",
+          "description": "许文彪一句'叶荣添，我们不再是兄弟了'，兄弟情从此决裂。",
+          "quoteId": 15,
+          "icon": "💔"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "春丁恋",
+      "characters": [
+        "余在春",
+        "丁柔"
+      ],
+      "actors": [
+        "欧阳震华",
+        "陈秀雯"
+      ],
+      "poster": "律政佳人",
+      "description": "大律师余在春与检察官丁柔，法庭上是唇枪舌战的对手，法庭外是相互吸引的恋人。知性成熟的恋爱关系，在壹号皇庭的一众案例中，成为最让人回味的感情线。",
+      "relationshipStatus": "HE · 修成正果",
+      "statusColor": "#3d8b3d",
+      "rating": 8.9,
+      "votes": 1876,
+      "tags": [
+        "法律",
+        "职场恋情",
+        "势均力敌",
+        "知性浪漫"
+      ],
+      "dramas": [
+        {
+          "dramaId": 11,
+          "title": "壹号皇庭",
+          "year": 1992,
+          "roleInStory": "主线CP",
+          "keyMoments": [
+            "法庭相遇",
+            "兰桂坊定情",
+            "步入婚姻"
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "event": "法庭初遇",
+          "date": "第1集",
+          "description": "余在春与丁柔在法庭上首次交锋，两人专业表现互相折服",
+          "type": "相遇"
+        },
+        {
+          "event": "唇枪舌战",
+          "date": "第5集",
+          "description": "多场法庭对决中，两人从对手变成互相欣赏的知己",
+          "type": "心动"
+        },
+        {
+          "event": "兰桂坊定情",
+          "date": "第9集",
+          "description": "收工后的兰桂坊，在春终于鼓起勇气表白，丁柔欣然应允",
+          "type": "关键节点"
+        },
+        {
+          "event": "步入婚姻",
+          "date": "大结局",
+          "description": "经历种种考验，两人终于携手步入婚姻殿堂",
+          "type": "圆满"
+        }
+      ],
+      "relationshipEvolution": [
+        {
+          "stage": "对手",
+          "description": "法庭交锋 · 各不相让",
+          "icon": "⚖️"
+        },
+        {
+          "stage": "欣赏",
+          "description": "惺惺相惜 · 互相敬重",
+          "icon": "🌟"
+        },
+        {
+          "stage": "恋人",
+          "description": "势均力敌 · 灵魂伴侣",
+          "icon": "💗"
+        },
+        {
+          "stage": "夫妻",
+          "description": "执子之手 · 与子偕老",
+          "icon": "💍"
+        }
+      ],
+      "classicScenes": [
+        {
+          "id": 1,
+          "title": "法庭交锋",
+          "episode": "第3集",
+          "description": "两人在法庭上激烈辩论，眼神交汇间藏不住的欣赏与爱慕。",
+          "quoteId": 19,
+          "icon": "⚖️"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "娥生CP",
+      "characters": [
+        "陈小生",
+        "朱素娥"
+      ],
+      "actors": [
+        "欧阳震华",
+        "关咏荷"
+      ],
+      "poster": "欢喜冤家",
+      "description": "风趣幽默的陈小生与独立坚强的朱素娥，是陀枪师姐系列最受欢迎的CP。从互相看不顺眼到默契搭档，再到成为恋人，两人的搞笑日常与甜蜜互动令人百看不厌。",
+      "relationshipStatus": "HE · 欢喜结局",
+      "statusColor": "#3d8b3d",
+      "rating": 9,
+      "votes": 2134,
+      "tags": [
+        "警匪",
+        "欢喜冤家",
+        "搞笑甜蜜",
+        "默契搭档"
+      ],
+      "dramas": [
+        {
+          "dramaId": 6,
+          "title": "陀枪师姐",
+          "year": 1998,
+          "roleInStory": "主线CP",
+          "keyMoments": [
+            "互相嫌弃",
+            "默契搭档",
+            "修成正果"
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "event": "互看不顺",
+          "date": "第1集",
+          "description": "陈小生的吊儿郎当与朱素娥的认真严谨形成鲜明对比，两人互看不顺眼",
+          "type": "相遇"
+        },
+        {
+          "event": "并肩作战",
+          "date": "第8集",
+          "description": "在多次行动中被迫合作，两人逐渐发现对方的优点",
+          "type": "心动"
+        },
+        {
+          "event": "铜锣湾约会",
+          "date": "第14集",
+          "description": "陈小生在铜锣湾精心策划了一场浪漫约会，两人正式开始交往",
+          "type": "关键节点"
+        },
+        {
+          "event": "生死考验",
+          "date": "第18集",
+          "description": "在一次危险行动中，陈小生为保护素娥身受重伤",
+          "type": "考验"
+        },
+        {
+          "event": "修成正果",
+          "date": "大结局",
+          "description": "经历重重考验，两人终于确认彼此就是命中注定的那个人",
+          "type": "圆满"
+        }
+      ],
+      "relationshipEvolution": [
+        {
+          "stage": "嫌弃",
+          "description": "互看不顺 · 斗嘴日常",
+          "icon": "😤"
+        },
+        {
+          "stage": "搭档",
+          "description": "并肩作战 · 默契渐生",
+          "icon": "🚓"
+        },
+        {
+          "stage": "恋人",
+          "description": "搞笑甜蜜 · 打情骂俏",
+          "icon": "💗"
+        },
+        {
+          "stage": "伴侣",
+          "description": "生死与共 · 相伴一生",
+          "icon": "🏠"
+        }
+      ],
+      "classicScenes": [
+        {
+          "id": 1,
+          "title": "警局斗嘴",
+          "episode": "第2集",
+          "description": "小生和娥姐在警局斗嘴的日常，娥姐一句'陈小生！'充满了喜感。",
+          "quoteId": 11,
+          "icon": "😂"
+        }
+      ]
+    }
+  ],
+  "cpVotes": [
+    {
+      "id": 1,
+      "coupleId": 1,
+      "nickname": "测试用户",
+      "comment": "YYDS",
+      "votedAt": "2026-06-21T03:23:29.095Z"
+    }
+  ]
 }

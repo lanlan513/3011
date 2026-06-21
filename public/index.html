@@ -57,6 +57,10 @@
                 <span class="nav-icon">🗺️</span>
                 <span class="nav-text">朝圣路线</span>
             </button>
+            <button class="nav-btn" data-page="couples">
+                <span class="nav-icon">💕</span>
+                <span class="nav-text">CP档案馆</span>
+            </button>
         </div>
     </nav>
 
@@ -82,6 +86,10 @@
                 <div class="stat-item">
                     <span class="stat-number" id="stat-locations">--</span>
                     <span class="stat-label">个经典取景地</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="stat-couples">--</span>
+                    <span class="stat-label">对经典CP</span>
                 </div>
             </div>
 
@@ -417,6 +425,76 @@
         <section id="actor-detail-page" class="page">
             <button class="back-btn" onclick="goBack()">← 返回列表</button>
             <div id="actor-detail"></div>
+        </section>
+
+        <section id="couples-page" class="page">
+            <div class="cp-tabs-container">
+                <button class="cp-tab active" data-tab="list">📚 CP档案馆</button>
+                <button class="cp-tab" data-tab="ranking">🏆 人气排行榜</button>
+            </div>
+
+            <div id="cp-list-tab" class="cp-tab-content active">
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label class="filter-label">搜索CP</label>
+                        <input type="text" id="cp-search" class="filter-input" placeholder="输入CP名、角色、演员或剧名...">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">结局类型</label>
+                        <select id="cp-status-select" class="filter-select">
+                            <option value="">全部结局</option>
+                            <option value="HE">HE · 圆满结局</option>
+                            <option value="BE">BE · 遗憾结局</option>
+                            <option value="复杂">复杂 · 相爱相杀</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">排序</label>
+                        <select id="cp-sort-select" class="filter-select">
+                            <option value="votes">人气最高</option>
+                            <option value="rating">评分最高</option>
+                            <option value="year">年代最早</option>
+                        </select>
+                    </div>
+                    <button class="filter-btn" id="cp-reset-btn">重置</button>
+                </div>
+
+                <div class="couples-grid" id="couples-list"></div>
+
+                <div class="loading" id="couples-loading" style="display:none;">
+                    <div class="loading-spinner"></div>
+                    <p>加载中...</p>
+                </div>
+
+                <div class="empty-state" id="couples-empty" style="display:none;">
+                    <p>💕 未找到相关CP组合</p>
+                </div>
+            </div>
+
+            <div id="cp-ranking-tab" class="cp-tab-content">
+                <div class="ranking-header-card">
+                    <div class="ranking-header-icon">🏆</div>
+                    <div class="ranking-header-info">
+                        <h2 class="ranking-title">港剧经典CP人气排行榜</h2>
+                        <p class="ranking-subtitle">综合投票数、近期热度和观众评分，为你呈现最受欢迎的荧幕CP</p>
+                        <p class="ranking-update" id="ranking-update">更新于 --</p>
+                    </div>
+                </div>
+
+                <div class="ranking-podium" id="ranking-podium"></div>
+
+                <div class="ranking-list" id="ranking-list"></div>
+
+                <div class="loading" id="ranking-loading" style="display:none;">
+                    <div class="loading-spinner"></div>
+                    <p>排行榜加载中...</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="cp-detail-page" class="page">
+            <button class="back-btn" onclick="goBack()">← 返回CP列表</button>
+            <div id="cp-detail"></div>
         </section>
     </main>
 

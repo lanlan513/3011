@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initFilters();
     initRoutePage();
     initLocationGenreFilter();
+    initCouplesPage();
     loadHomePage();
     loadGenres();
     loadYears();
@@ -157,6 +158,9 @@ function navigateTo(pageName, addToHistory = true) {
         case 'checkins':
             loadCheckIns();
             break;
+        case 'couples':
+            loadCouples();
+            break;
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -195,6 +199,9 @@ async function loadHomePage() {
         animateNumber('stat-genres', stats.genreCount);
         if (stats.locationCount) {
             animateNumber('stat-locations', stats.locationCount);
+        }
+        if (stats.coupleCount) {
+            animateNumber('stat-couples', stats.coupleCount);
         }
     }
 
@@ -1236,6 +1243,553 @@ async function loadCheckIns() {
                 loadCheckInStats();
                 loadCheckIns();
             }
+        });
+    });
+}
+
+function initCouplesPage() {
+    document.querySelectorAll('.cp-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetTab = tab.dataset.tab;
+            document.querySelectorAll('.cp-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelectorAll('.cp-tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(`cp-${targetTab}-tab`).classList.add('active');
+
+            if (targetTab === 'ranking') {
+                loadCpRanking();
+            }
+        });
+    });
+
+    const cpSearch = document.getElementById('cp-search');
+    const cpStatus = document.getElementById('cp-status-select');
+    const cpSort = document.getElementById('cp-sort-select');
+    const cpReset = document.getElementById('cp-reset-btn');
+
+    let searchTimeout;
+    cpSearch.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(loadCouples, 300);
+    });
+
+    cpStatus.addEventListener('change', loadCouples);
+    cpSort.addEventListener('change', loadCouples);
+
+    cpReset.addEventListener('click', () => {
+        cpSearch.value = '';
+        cpStatus.value = '';
+        cpSort.value = 'votes';
+        loadCouples();
+    });
+}
+
+async function loadCouples() {
+    const search = document.getElementById('cp-search').value;
+    const statusFilter = document.getElementById('cp-status-select').value;
+    const sort = document.getElementById('cp-sort-select').value;
+
+    const container = document.getElementById('couples-list');
+    const loading = document.getElementById('couples-loading');
+    const empty = document.getElementById('couples-empty');
+
+    loading.style.display = 'block';
+    container.innerHTML = '';
+    empty.style.display = 'none';
+
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (sort) params.append('sort', sort);
+
+    let couples = await apiCall(`/couples?${params.toString()}`);
+
+    loading.style.display = 'none';
+
+    if (!couples || couples.length === 0) {
+        empty.style.display = 'block';
+        return;
+    }
+
+    if (statusFilter) {
+        couples = couples.filter(c => c.relationshipStatus.includes(statusFilter));
+    }
+
+    if (couples.length === 0) {
+        empty.style.display = 'block';
+        return;
+    }
+
+    container.innerHTML = couples.map(cp => createCpCard(cp)).join('');
+
+    container.querySelectorAll('.cp-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const id = parseInt(card.dataset.id);
+            showCpDetail(id);
+        });
+    });
+
+    container.querySelectorAll('.cp-vote-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = parseInt(btn.dataset.id);
+            openVoteModal(id);
+        });
+    });
+}
+
+function createCpCard(cp) {
+    const statusColor = cp.statusColor || '#d4a84b';
+    const mainTag = cp.tags ? cp.tags[0] : '';
+    const minYear = cp.dramas.length > 0 ? Math.min(...cp.dramas.map(d => d.year || 0)) : 0;
+
+    return `
+        <div class="cp-card" data-id="${cp.id}">
+            <div class="cp-card-poster">
+                <div class="cp-characters-display">
+                    <div class="cp-char-avatar left">${cp.characters[0].charAt(0)}</div>
+                    <div class="cp-heart-icon">💕</div>
+                    <div class="cp-char-avatar right">${cp.characters[1] ? cp.characters[1].charAt(0) : '?'}</div>
+                </div>
+                <div class="cp-rating-badge">⭐ ${cp.rating ? cp.rating.toFixed(1) : '--'}</div>
+                <div class="cp-status-badge" style="background:${statusColor}">${cp.relationshipStatus || '--'}</div>
+            </div>
+            <div class="cp-card-info">
+                <h3 class="cp-name">${cp.name}</h3>
+                <div class="cp-characters-row">
+                    ${cp.characters.map(ch => `<span class="cp-character-tag">${ch}</span>`).join('<span class="cp-heart-mini">❤</span>')}
+                </div>
+                <div class="cp-actors-row">
+                    ${cp.actors.map(a => `<span class="cp-actor-name">${a}</span>`).join(' × ')}
+                </div>
+                <div class="cp-tags-row">
+                    ${(cp.tags || []).slice(0, 3).map(t => `<span class="cp-tag-mini">${t}</span>`).join('')}
+                </div>
+                <div class="cp-card-footer">
+                    <div class="cp-drama-info">🎬 ${cp.dramaCount || cp.dramas.length}部剧集 · ${minYear || '--'}年</div>
+                    <button class="cp-vote-btn" data-id="${cp.id}">
+                        <span>🗳️</span>
+                        <span>${cp.totalVotes || cp.votes || 0}票</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function showCpDetail(id) {
+    const cp = await apiCall(`/couples/${id}`);
+    const container = document.getElementById('cp-detail');
+
+    if (!cp) {
+        container.innerHTML = '<p>加载失败</p>';
+        return;
+    }
+
+    const statusColor = cp.statusColor || '#d4a84b';
+
+    container.innerHTML = `
+        <div class="cp-detail-header">
+            <div class="cp-detail-poster-section">
+                <div class="cp-detail-hero">
+                    <div class="cp-detail-avatar-wrap">
+                        <div class="cp-detail-avatar left">${cp.characters[0].charAt(0)}</div>
+                        <div class="cp-detail-heart">💕</div>
+                        <div class="cp-detail-avatar right">${cp.characters[1] ? cp.characters[1].charAt(0) : '?'}</div>
+                    </div>
+                    <h1 class="cp-detail-name">${cp.name}</h1>
+                    <div class="cp-detail-status" style="background:${statusColor}">${cp.relationshipStatus || '--'}</div>
+                    <div class="cp-detail-char-row">
+                        ${cp.characters.map((ch, i) => `
+                            <div class="cp-char-info-block">
+                                <div class="cp-char-name">${ch}</div>
+                                <div class="cp-char-actor">饰演：${cp.actors[i] || '--'}</div>
+                            </div>
+                        `).join('<div class="cp-vs-divider">❤</div>')}
+                    </div>
+                </div>
+            </div>
+            <div class="cp-detail-stats">
+                <div class="cp-stat-box">
+                    <span class="cp-stat-icon">⭐</span>
+                    <span class="cp-stat-value">${cp.rating ? cp.rating.toFixed(1) : '--'}</span>
+                    <span class="cp-stat-label">CP评分</span>
+                </div>
+                <div class="cp-stat-box gold">
+                    <span class="cp-stat-icon">🗳️</span>
+                    <span class="cp-stat-value" id="cp-vote-count-${cp.id}">${cp.totalVotes || cp.votes || 0}</span>
+                    <span class="cp-stat-label">人气票数</span>
+                </div>
+                <div class="cp-stat-box">
+                    <span class="cp-stat-icon">🎬</span>
+                    <span class="cp-stat-value">${cp.dramas.length}</span>
+                    <span class="cp-stat-label">部剧集</span>
+                </div>
+                <div class="cp-stat-box">
+                    <span class="cp-stat-icon">🎞️</span>
+                    <span class="cp-stat-value">${cp.classicScenes.length}</span>
+                    <span class="cp-stat-label">经典片段</span>
+                </div>
+                <button class="cp-detail-vote-btn" onclick="openVoteModal(${cp.id})">
+                    <span>💖</span> 为这对CP投一票
+                </button>
+            </div>
+        </div>
+
+        <div class="cp-tags-container">
+            ${(cp.tags || []).map(t => `<span class="cp-detail-tag">${t}</span>`).join('')}
+        </div>
+
+        <div class="detail-section">
+            <h3>💕 关于这对CP</h3>
+            <p class="cp-description">${cp.description}</p>
+        </div>
+
+        <div class="detail-section">
+            <h3>📈 关系演变历程</h3>
+            <div class="relationship-evolution-container">
+                ${cp.relationshipEvolution.map((stage, index) => `
+                    <div class="evolution-node">
+                        <div class="evolution-icon">${stage.icon}</div>
+                        <div class="evolution-content">
+                            <div class="evolution-stage">${stage.stage}</div>
+                            <div class="evolution-desc">${stage.description}</div>
+                        </div>
+                        ${index < cp.relationshipEvolution.length - 1 ? '<div class="evolution-arrow">→</div>' : ''}
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h3>📅 感情时间线</h3>
+            <div class="cp-timeline-container">
+                ${cp.timeline.map((event, index) => {
+                    const typeColors = {
+                        '相遇': '#2b5c8b',
+                        '心动': '#d4a84b',
+                        '关键节点': '#3d8b3d',
+                        '考验': '#c41e3a',
+                        '圆满': '#3d8b3d',
+                        '虐心': '#c41e3a',
+                        '复杂结局': '#d4a84b'
+                    };
+                    const color = typeColors[event.type] || '#4a4a4a';
+                    const icon = {
+                        '相遇': '👋',
+                        '心动': '💓',
+                        '关键节点': '⭐',
+                        '考验': '⚡',
+                        '圆满': '🎉',
+                        '虐心': '😢',
+                        '复杂结局': '♾️'
+                    }[event.type] || '📌';
+
+                    return `
+                        <div class="timeline-item">
+                            <div class="timeline-marker" style="background:${color}">${icon}</div>
+                            <div class="timeline-content-card">
+                                <div class="timeline-header">
+                                    <span class="timeline-event-name">${event.event}</span>
+                                    <span class="timeline-date">${event.date}</span>
+                                </div>
+                                <div class="timeline-type-tag" style="background:${color}22;color:${color};border:1px solid ${color}44">
+                                    ${event.type}
+                                </div>
+                                <p class="timeline-desc">${event.description}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h3>🎞️ 代表剧集</h3>
+            <div class="cp-dramas-grid">
+                ${cp.dramas.map(drama => `
+                    <div class="cp-drama-card" data-drama-id="${drama.dramaId}">
+                        <div class="cp-drama-header">
+                            <h4 class="cp-drama-title">《${drama.title}》</h4>
+                            <span class="cp-drama-year">${drama.year}年</span>
+                        </div>
+                        <div class="cp-drama-role">📌 ${drama.roleInStory}</div>
+                        <div class="cp-drama-moments">
+                            <div class="cp-drama-key-title">✨ 关键剧情：</div>
+                            <ul>
+                                ${(drama.keyMoments || []).map(m => `<li>${m}</li>`).join('')}
+                            </ul>
+                        </div>
+                        ${drama.rating ? `<div class="cp-drama-rating">⭐ 评分：${drama.rating}</div>` : ''}
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h3>🎬 经典片段回忆</h3>
+            <div class="classic-scenes-grid">
+                ${cp.classicScenes.map(scene => `
+                    <div class="classic-scene-card">
+                        <div class="classic-scene-icon">${scene.icon || '🎞️'}</div>
+                        <div class="classic-scene-info">
+                            <h4 class="classic-scene-title">${scene.title}</h4>
+                            <div class="classic-scene-episode">📺 ${scene.episode}</div>
+                            <p class="classic-scene-desc">${scene.description}</p>
+                            ${scene.quote ? `
+                            <div class="classic-scene-quote">
+                                <p class="quote-text">「${scene.quote.text}」</p>
+                                <span class="quote-character">—— ${scene.quote.character}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h3>🗳️ 为他们投票打Call</h3>
+            <div class="vote-section-box">
+                <p class="vote-section-desc">喜欢这对CP吗？为他们投上宝贵的一票，让更多人看到他们的故事！</p>
+                <button class="cp-detail-vote-btn large" onclick="openVoteModal(${cp.id})">
+                    <span>💖</span> 我要投票支持这对CP
+                </button>
+            </div>
+        </div>
+    `;
+
+    container.querySelectorAll('.cp-drama-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const dramaId = parseInt(card.dataset.dramaId);
+            showDramaDetail(dramaId);
+        });
+    });
+
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('cp-detail-page').classList.add('active');
+    pageHistory.push(currentPage);
+    currentPage = 'cp-detail';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function openVoteModal(coupleId) {
+    const existingModal = document.getElementById('vote-modal');
+    if (existingModal) existingModal.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'vote-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content vote-modal">
+            <div class="modal-close-btn" onclick="closeVoteModal()">×</div>
+            <div class="vote-modal-header">
+                <div class="vote-modal-icon">💖</div>
+                <h3 class="vote-modal-title">为这对CP投上一票</h3>
+                <p class="vote-modal-subtitle">每一票都是对他们爱情的支持！</p>
+            </div>
+            <div class="vote-form">
+                <div class="vote-input-group">
+                    <label class="vote-input-label">你的昵称</label>
+                    <input type="text" id="vote-nickname" class="vote-input" placeholder="请输入昵称（选填）" maxlength="20">
+                </div>
+                <div class="vote-input-group">
+                    <label class="vote-input-label">留言支持（选填）</label>
+                    <textarea id="vote-comment" class="vote-textarea" placeholder="写下你对这对CP的祝福或感想..." maxlength="200"></textarea>
+                </div>
+                <div class="vote-quick-tags">
+                    <span class="quick-tag" onclick="addVoteTag('YYDS！永远的神')">YYDS！永远的神</span>
+                    <span class="quick-tag" onclick="addVoteTag('意难平😭')">意难平😭</span>
+                    <span class="quick-tag" onclick="addVoteTag('太好嗑了！')">太好嗑了！</span>
+                    <span class="quick-tag" onclick="addVoteTag('童年回忆')">童年回忆</span>
+                    <span class="quick-tag" onclick="addVoteTag('经典永流传')">经典永流传</span>
+                </div>
+                <button class="vote-submit-btn" onclick="submitVote(${coupleId})">
+                    <span>💖</span> 确认投票
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+function addVoteTag(tag) {
+    const textarea = document.getElementById('vote-comment');
+    if (textarea) {
+        textarea.value = textarea.value ? textarea.value + ' ' + tag : tag;
+    }
+}
+
+function closeVoteModal() {
+    const modal = document.getElementById('vote-modal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
+    }
+}
+
+async function submitVote(coupleId) {
+    const nickname = document.getElementById('vote-nickname').value;
+    const comment = document.getElementById('vote-comment').value;
+
+    try {
+        const response = await fetch(`${API_BASE}/couples/${coupleId}/vote`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nickname, comment })
+        });
+
+        if (!response.ok) throw new Error('投票失败');
+
+        const result = await response.json();
+
+        const voteCountEl = document.getElementById(`cp-vote-count-${coupleId}`);
+        if (voteCountEl) {
+            voteCountEl.textContent = result.totalVotes;
+        }
+
+        showVoteSuccess();
+        closeVoteModal();
+
+        if (currentPage === 'couples') {
+            loadCouples();
+        }
+
+    } catch (error) {
+        console.error('投票失败:', error);
+        alert('投票失败，请稍后重试');
+    }
+}
+
+function showVoteSuccess() {
+    const toast = document.createElement('div');
+    toast.className = 'toast-success';
+    toast.innerHTML = '💖 投票成功！感谢你的支持';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 2500);
+}
+
+async function loadCpRanking() {
+    const loading = document.getElementById('ranking-loading');
+    const podium = document.getElementById('ranking-podium');
+    const list = document.getElementById('ranking-list');
+    const updateEl = document.getElementById('ranking-update');
+
+    loading.style.display = 'block';
+    podium.innerHTML = '';
+    list.innerHTML = '';
+
+    const result = await apiCall('/couples/ranking');
+
+    loading.style.display = 'none';
+
+    if (!result || !result.ranking || result.ranking.length === 0) {
+        list.innerHTML = '<p style="text-align:center;padding:40px;color:#7a7a7a;">暂无排行榜数据</p>';
+        return;
+    }
+
+    if (result.updatedAt) {
+        const date = new Date(result.updatedAt);
+        updateEl.textContent = `更新于 ${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+    }
+
+    const top3 = result.ranking.slice(0, 3);
+    const rest = result.ranking.slice(3);
+
+    const podiumData = [null, null, null];
+    top3.forEach(cp => {
+        if (cp.rank === 1) podiumData[0] = cp;
+        else if (cp.rank === 2) podiumData[1] = cp;
+        else if (cp.rank === 3) podiumData[2] = cp;
+    });
+
+    const podiumOrder = [1, 0, 2];
+    const podiumColors = ['#d4a84b', '#c0c0c0', '#cd7f32'];
+    const podiumHeights = ['300px', '250px', '200px'];
+    const podiumIcons = ['🥇', '🥈', '🥉'];
+
+    podium.innerHTML = podiumOrder.map((idx, pos) => {
+        const cp = podiumData[idx];
+        if (!cp) return '';
+        const color = podiumColors[idx];
+        const height = podiumHeights[idx];
+        const icon = podiumIcons[idx];
+
+        return `
+            <div class="podium-item rank-${idx + 1}" data-id="${cp.id}">
+                ${cp.isNew ? '<div class="podium-new-tag">HOT</div>' : ''}
+                <div class="podium-avatar-wrap">
+                    <div class="podium-avatar left">${cp.characters[0].charAt(0)}</div>
+                    <div class="podium-heart">💕</div>
+                    <div class="podium-avatar right">${cp.characters[1] ? cp.characters[1].charAt(0) : '?'}</div>
+                </div>
+                <div class="podium-name">${cp.name}</div>
+                <div class="podium-chars">${cp.characters.join(' ❤ ')}</div>
+                <div class="podium-stats">
+                    <span>⭐ ${cp.rating ? cp.rating.toFixed(1) : '--'}</span>
+                    <span>🗳️ ${cp.totalVotes}</span>
+                </div>
+                <div class="podium-base" style="height:${height};background:linear-gradient(180deg, ${color}44, ${color}22);border:2px solid ${color};">
+                    <div class="podium-rank-icon">${icon}</div>
+                    <div class="podium-rank-num">第${idx + 1}名</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    list.innerHTML = rest.map(cp => {
+        const trendIcon = cp.trend === 'up' ? '📈' : (cp.trend === 'down' ? '📉' : '➡️');
+        return `
+            <div class="ranking-list-item" data-id="${cp.id}">
+                <div class="ranking-rank-num">${cp.rank}</div>
+                <div class="ranking-item-info">
+                    <div class="ranking-item-header">
+                        <span class="ranking-item-name">${cp.name}</span>
+                        ${cp.isNew ? '<span class="ranking-new">NEW</span>' : ''}
+                        <span class="ranking-trend">${trendIcon}</span>
+                    </div>
+                    <div class="ranking-item-chars">${cp.characters.join(' ❤ ')} · ${cp.actors.join('×')}</div>
+                    <div class="ranking-item-tags">
+                        ${(cp.tags || []).slice(0, 2).map(t => `<span class="ranking-tag">${t}</span>`).join('')}
+                        <span class="ranking-status" style="color:${cp.statusColor || '#d4a84b'}">${cp.relationshipStatus || ''}</span>
+                    </div>
+                </div>
+                <div class="ranking-item-score">
+                    <div class="ranking-hot-score">🔥 ${cp.hotScore ? cp.hotScore.toFixed(0) : '--'}</div>
+                    <div class="ranking-votes">🗳️ ${cp.totalVotes}票</div>
+                    <div class="ranking-rating">⭐ ${cp.rating ? cp.rating.toFixed(1) : '--'}</div>
+                </div>
+                <button class="ranking-vote-btn" data-id="${cp.id}">投票</button>
+            </div>
+        `;
+    }).join('');
+
+    podium.querySelectorAll('.podium-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const id = parseInt(item.dataset.id);
+            showCpDetail(id);
+        });
+    });
+
+    list.querySelectorAll('.ranking-list-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            if (!e.target.closest('.ranking-vote-btn')) {
+                const id = parseInt(item.dataset.id);
+                showCpDetail(id);
+            }
+        });
+    });
+
+    list.querySelectorAll('.ranking-vote-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = parseInt(btn.dataset.id);
+            openVoteModal(id);
         });
     });
 }

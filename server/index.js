@@ -291,7 +291,9 @@ app.get('/api/stats', (req, res) => {
     quoteCount: data.quotes.length,
     genreCount: new Set(data.dramas.flatMap(d => d.genre)).size,
     locationCount: (data.locations || []).length,
-    checkInCount: (data.checkIns || []).length
+    checkInCount: (data.checkIns || []).length,
+    coupleCount: (data.couples || []).length,
+    cpVoteCount: (data.cpVotes || []).length
   });
 });
 
@@ -728,6 +730,167 @@ app.delete('/api/actors/:id', (req, res) => {
   const deleted = data.actors.splice(index, 1);
   writeData(data);
   res.json(deleted[0]);
+});
+
+app.get('/api/couples', (req, res) => {
+  const { search, dramaId, sort } = req.query;
+  const data = readData();
+  let couples = data.couples || [];
+
+  if (search) {
+    const keyword = search.toLowerCase();
+    couples = couples.filter(c =>
+      c.name.toLowerCase().includes(keyword) ||
+      c.characters.some(ch => ch.toLowerCase().includes(keyword)) ||
+      c.actors.some(a => a.toLowerCase().includes(keyword)) ||
+      c.dramas.some(d => d.title.toLowerCase().includes(keyword))
+    );
+  }
+
+  if (dramaId) {
+    const id = parseInt(dramaId);
+    couples = couples.filter(c => c.dramas.some(d => d.dramaId === id));
+  }
+
+  if (sort === 'votes') {
+    couples = [...couples].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+  } else if (sort === 'rating') {
+    couples = [...couples].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  } else if (sort === 'year') {
+    couples = [...couples].sort((a, b) => {
+      const aYear = a.dramas.length > 0 ? Math.min(...a.dramas.map(d => d.year || 9999)) : 9999;
+      const bYear = b.dramas.length > 0 ? Math.min(...b.dramas.map(d => d.year || 9999)) : 9999;
+      return aYear - bYear;
+    });
+  }
+
+  const result = couples.map(cp => {
+    const totalVotes = cp.votes || 0;
+    const userVotes = (data.cpVotes || []).filter(v => v.coupleId === cp.id).length;
+    return {
+      ...cp,
+      totalVotes: totalVotes + userVotes,
+      dramaCount: cp.dramas.length,
+      sceneCount: cp.classicScenes.length
+    };
+  });
+
+  res.json(result);
+});
+
+app.get('/api/couples/ranking', (req, res) => {
+  const data = readData();
+  const couples = data.couples || [];
+
+  const withVotes = couples.map(cp => {
+    const baseVotes = cp.votes || 0;
+    const userVotes = (data.cpVotes || []).filter(v => v.coupleId === cp.id).length;
+    const recentVotes = (data.cpVotes || []).filter(v => {
+      if (v.coupleId !== cp.id) return false;
+      const voteDate = new Date(v.votedAt);
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return voteDate >= weekAgo;
+    }).length;
+
+    return {
+      id: cp.id,
+      name: cp.name,
+      characters: cp.characters,
+      actors: cp.actors,
+      poster: cp.poster,
+      relationshipStatus: cp.relationshipStatus,
+      rating: cp.rating,
+      baseVotes,
+      userVotes,
+      recentVotes,
+      totalVotes: baseVotes + userVotes,
+      hotScore: (baseVotes + userVotes) * 1 + recentVotes * 5 + (cp.rating || 0) * 100
+    };
+  });
+
+  withVotes.sort((a, b) => b.hotScore - a.hotScore);
+
+  const top10 = withVotes.slice(0, 10).map((cp, index) => ({
+    ...cp,
+    rank: index + 1,
+    isNew: index < 3 && cp.recentVotes > 0,
+    trend: index === 0 ? 'up' : (withVotes[index].totalVotes > (withVotes[index + 1]?.totalVotes || 0) ? 'stable' : 'down')
+  }));
+
+  res.json({
+    updatedAt: new Date().toISOString(),
+    ranking: top10
+  });
+});
+
+app.post('/api/couples/:id/vote', (req, res) => {
+  const data = readData();
+  const cpId = parseInt(req.params.id);
+  const { nickname, comment } = req.body;
+
+  const cp = (data.couples || []).find(c => c.id === cpId);
+  if (!cp) {
+    return res.status(404).json({ error: 'CP组合未找到' });
+  }
+
+  if (!data.cpVotes) data.cpVotes = [];
+
+  const newVote = {
+    id: data.cpVotes.length > 0 ? Math.max(...data.cpVotes.map(v => v.id)) + 1 : 1,
+    coupleId: cpId,
+    nickname: nickname || '匿名粉丝',
+    comment: comment || '',
+    votedAt: new Date().toISOString()
+  };
+
+  data.cpVotes.push(newVote);
+  writeData(data);
+
+  const totalVotes = cp.votes || 0;
+  const userVotes = data.cpVotes.filter(v => v.coupleId === cpId).length;
+
+  res.status(201).json({
+    vote: newVote,
+    totalVotes: totalVotes + userVotes
+  });
+});
+
+app.get('/api/couples/:id', (req, res) => {
+  const data = readData();
+  const cp = (data.couples || []).find(c => c.id === parseInt(req.params.id));
+
+  if (!cp) {
+    return res.status(404).json({ error: 'CP组合未找到' });
+  }
+
+  const dramas = cp.dramas.map(d => {
+    const dramaData = data.dramas.find(drama => drama.id === d.dramaId);
+    return {
+      ...d,
+      englishTitle: dramaData ? dramaData.englishTitle : '',
+      rating: dramaData ? dramaData.rating : null,
+      synopsis: dramaData ? dramaData.synopsis : ''
+    };
+  });
+
+  const classicScenes = cp.classicScenes.map(scene => {
+    const quote = scene.quoteId ? data.quotes.find(q => q.id === scene.quoteId) : null;
+    return {
+      ...scene,
+      quote: quote ? { text: quote.text, character: quote.character } : null
+    };
+  });
+
+  const totalVotes = cp.votes || 0;
+  const userVotes = (data.cpVotes || []).filter(v => v.coupleId === cp.id).length;
+
+  res.json({
+    ...cp,
+    dramas,
+    classicScenes,
+    totalVotes: totalVotes + userVotes
+  });
 });
 
 app.get('/api/health', (req, res) => {
