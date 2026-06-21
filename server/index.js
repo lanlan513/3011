@@ -20,6 +20,11 @@ function writeData(data) {
   fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), 'utf8');
 }
 
+function is90sYear(year) {
+  const y = parseInt(year);
+  return !isNaN(y) && y >= 1990 && y <= 1999;
+}
+
 app.get('/api/dramas', (req, res) => {
   const { genre, year, actor, search, sort } = req.query;
   let data = readData();
@@ -210,6 +215,11 @@ app.get('/api/stats', (req, res) => {
 
 app.post('/api/dramas', (req, res) => {
   const data = readData();
+
+  if (req.body.year && !is90sYear(req.body.year)) {
+    return res.status(400).json({ error: '剧集年份必须在1990-1999之间（90年代）' });
+  }
+
   const newDrama = {
     id: data.dramas.length > 0 ? Math.max(...data.dramas.map(d => d.id)) + 1 : 1,
     ...req.body,
@@ -230,6 +240,10 @@ app.put('/api/dramas/:id', (req, res) => {
     return res.status(404).json({ error: '剧集未找到' });
   }
 
+  if (req.body.year && !is90sYear(req.body.year)) {
+    return res.status(400).json({ error: '剧集年份必须在1990-1999之间（90年代）' });
+  }
+
   data.dramas[index] = { ...data.dramas[index], ...req.body };
   writeData(data);
   res.json(data.dramas[index]);
@@ -244,6 +258,55 @@ app.delete('/api/dramas/:id', (req, res) => {
   }
 
   const deleted = data.dramas.splice(index, 1);
+  writeData(data);
+  res.json(deleted[0]);
+});
+
+app.post('/api/actors', (req, res) => {
+  const data = readData();
+  const newActor = {
+    id: data.actors.length > 0 ? Math.max(...data.actors.map(a => a.id)) + 1 : 1,
+    name: req.body.name || '',
+    birthYear: req.body.birthYear || null,
+    description: req.body.description || ''
+  };
+
+  if (!newActor.name) {
+    return res.status(400).json({ error: '演员姓名不能为空' });
+  }
+
+  data.actors.push(newActor);
+  writeData(data);
+  res.status(201).json(newActor);
+});
+
+app.put('/api/actors/:id', (req, res) => {
+  const data = readData();
+  const index = data.actors.findIndex(a => a.id === parseInt(req.params.id));
+
+  if (index === -1) {
+    return res.status(404).json({ error: '演员未找到' });
+  }
+
+  data.actors[index] = { ...data.actors[index], ...req.body };
+  writeData(data);
+  res.json(data.actors[index]);
+});
+
+app.delete('/api/actors/:id', (req, res) => {
+  const data = readData();
+  const index = data.actors.findIndex(a => a.id === parseInt(req.params.id));
+
+  if (index === -1) {
+    return res.status(404).json({ error: '演员未找到' });
+  }
+
+  const actorId = parseInt(req.params.id);
+  data.dramas.forEach(drama => {
+    drama.actors = drama.actors.filter(a => a.actorId !== actorId);
+  });
+
+  const deleted = data.actors.splice(index, 1);
   writeData(data);
   res.json(deleted[0]);
 });
