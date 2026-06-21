@@ -1873,6 +1873,7 @@ function initProfessionsPage() {
 
     loadProfessionCategories();
     loadProfessionTags();
+    loadProfessions();
 }
 
 async function loadProfessionCategories() {
@@ -2081,14 +2082,17 @@ async function showProfessionDetail(id) {
 async function loadCompareSelector() {
     const professions = await apiCall('/professions');
     const container = document.getElementById('compare-profession-selector');
+    const genBtn = document.getElementById('compare-generate-btn');
     if (!container || !professions) return;
 
     selectedCompareProfessions = [];
+    updateCompareButtonState();
 
     container.innerHTML = professions.map(p => `
         <div class="compare-prof-chip" data-id="${p.id}" style="--prof-color: ${p.color}">
             <span class="compare-prof-icon">${p.icon}</span>
             <span class="compare-prof-name">${p.name}</span>
+            <span class="compare-prof-check">✓</span>
         </div>
     `).join('');
 
@@ -2100,12 +2104,30 @@ async function loadCompareSelector() {
                 selectedCompareProfessions.splice(index, 1);
                 chip.classList.remove('selected');
             } else {
-                if (selectedCompareProfessions.length >= 4) return;
+                if (selectedCompareProfessions.length >= 4) {
+                    chip.classList.add('shake');
+                    setTimeout(() => chip.classList.remove('shake'), 400);
+                    return;
+                }
                 selectedCompareProfessions.push(id);
                 chip.classList.add('selected');
             }
+            updateCompareButtonState();
         });
     });
+}
+
+function updateCompareButtonState() {
+    const genBtn = document.getElementById('compare-generate-btn');
+    if (!genBtn) return;
+    const count = selectedCompareProfessions.length;
+    if (count >= 2) {
+        genBtn.classList.add('active');
+        genBtn.querySelector('span:last-child').textContent = `开始对比分析 (已选${count}个)`;
+    } else {
+        genBtn.classList.remove('active');
+        genBtn.querySelector('span:last-child').textContent = `开始对比分析 (请选2-4个)`;
+    }
 }
 
 async function generateComparison() {
@@ -2142,58 +2164,183 @@ function renderCompareResult(result) {
     const maxCharCount = Math.max(...profs.map(p => p.characterCount));
     const maxBridgeCount = Math.max(...profs.map(p => p.bridgeCount));
 
+    const dimRows = [
+        {
+            label: '职业',
+            icon: '🎭',
+            type: 'header',
+            render: (p) => `
+                <div class="compare-grid-cell-header" style="--prof-color: ${p.color}">
+                    <span class="compare-grid-cell-icon">${p.icon}</span>
+                    <span class="compare-grid-cell-name">${p.name}</span>
+                    <span class="compare-grid-cell-cat" style="background: ${p.color}">${p.category}</span>
+                </div>
+            `
+        },
+        {
+            label: '代表人物',
+            icon: '👤',
+            type: 'bar',
+            max: maxCharCount,
+            unit: '人',
+            valueKey: 'characterCount'
+        },
+        {
+            label: '经典桥段',
+            icon: '🎬',
+            type: 'bar',
+            max: maxBridgeCount,
+            unit: '个',
+            valueKey: 'bridgeCount'
+        },
+        {
+            label: '相关剧集',
+            icon: '📺',
+            type: 'bar',
+            max: maxDramaCount,
+            unit: '部',
+            valueKey: 'dramaCount'
+        },
+        {
+            label: '平均评分',
+            icon: '⭐',
+            type: 'rating',
+            valueKey: 'avgRating'
+        },
+        {
+            label: '特征标签',
+            icon: '🏷️',
+            type: 'tags',
+            valueKey: 'topTraits'
+        }
+    ];
+
     container.innerHTML = `
         <div class="compare-result-header">
             <h3 class="compare-result-title">📊 跨剧集职业对比分析</h3>
-            <p class="compare-result-subtitle">以下分析基于港剧数据库中的职业角色数据</p>
+            <p class="compare-result-subtitle">横向对比不同职业在港剧中的数据表现，同一维度一目了然</p>
         </div>
 
-        <div class="compare-cards-row">
-            ${profs.map(p => `
-                <div class="compare-result-card" style="--prof-color: ${p.color}; border-color: ${p.color}44">
-                    <div class="compare-result-card-header" style="background: ${p.color}22">
-                        <span class="compare-result-icon">${p.icon}</span>
-                        <h4 class="compare-result-name">${p.name}</h4>
-                        <span class="compare-result-cat" style="background: ${p.color}">${p.category}</span>
+        <div class="compare-grid-wrapper">
+            <div class="compare-grid-table">
+                <div class="compare-grid-row compare-grid-row-header">
+                    <div class="compare-grid-label-cell">
+                        <span class="compare-grid-dim-icon">📊</span>
+                        <span class="compare-grid-dim-label">对比维度</span>
                     </div>
-                    <div class="compare-result-stats">
-                        <div class="compare-stat-item">
-                            <span class="compare-stat-label">代表人物</span>
-                            <div class="compare-stat-bar-wrap">
-                                <div class="compare-stat-bar" style="width: ${(p.characterCount / maxCharCount) * 100}%; background: ${p.color}"></div>
-                            </div>
-                            <span class="compare-stat-value">${p.characterCount}人</span>
+                    ${profs.map(p => `
+                        <div class="compare-grid-header-cell" style="--prof-color: ${p.color}; border-color: ${p.color}">
+                            <span class="compare-grid-header-icon">${p.icon}</span>
+                            <span class="compare-grid-header-name">${p.name}</span>
                         </div>
-                        <div class="compare-stat-item">
-                            <span class="compare-stat-label">经典桥段</span>
-                            <div class="compare-stat-bar-wrap">
-                                <div class="compare-stat-bar" style="width: ${(p.bridgeCount / maxBridgeCount) * 100}%; background: ${p.color}"></div>
-                            </div>
-                            <span class="compare-stat-value">${p.bridgeCount}个</span>
-                        </div>
-                        <div class="compare-stat-item">
-                            <span class="compare-stat-label">相关剧集</span>
-                            <div class="compare-stat-bar-wrap">
-                                <div class="compare-stat-bar" style="width: ${(p.dramaCount / maxDramaCount) * 100}%; background: ${p.color}"></div>
-                            </div>
-                            <span class="compare-stat-value">${p.dramaCount}部</span>
-                        </div>
-                        <div class="compare-stat-item">
-                            <span class="compare-stat-label">平均评分</span>
-                            <span class="compare-stat-value highlight">⭐ ${p.avgRating}</span>
-                        </div>
-                    </div>
-                    <div class="compare-traits-row">
-                        ${p.topTraits.map(t => `<span class="compare-trait-tag">${t}</span>`).join('')}
-                    </div>
+                    `).join('')}
                 </div>
-            `).join('')}
+
+                ${dimRows.map(dim => {
+                    if (dim.type === 'header') {
+                        return `
+                            <div class="compare-grid-row">
+                                <div class="compare-grid-label-cell">
+                                    <span class="compare-grid-dim-icon">${dim.icon}</span>
+                                    <span class="compare-grid-dim-label">${dim.label}</span>
+                                </div>
+                                ${profs.map(p => `
+                                    <div class="compare-grid-cell" style="--prof-color: ${p.color}">
+                                        ${dim.render(p)}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    } else if (dim.type === 'bar') {
+                        return `
+                            <div class="compare-grid-row">
+                                <div class="compare-grid-label-cell">
+                                    <span class="compare-grid-dim-icon">${dim.icon}</span>
+                                    <span class="compare-grid-dim-label">${dim.label}</span>
+                                </div>
+                                ${profs.map(p => {
+                                    const val = p[dim.valueKey];
+                                    const pct = (val / dim.max) * 100;
+                                    return `
+                                        <div class="compare-grid-cell" style="--prof-color: ${p.color}">
+                                            <div class="compare-grid-bar-wrap">
+                                                <div class="compare-grid-bar-track">
+                                                    <div class="compare-grid-bar-fill" style="width: ${pct}%; background: ${p.color}"></div>
+                                                </div>
+                                                <span class="compare-grid-bar-value">${val}${dim.unit}</span>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        `;
+                    } else if (dim.type === 'rating') {
+                        return `
+                            <div class="compare-grid-row">
+                                <div class="compare-grid-label-cell">
+                                    <span class="compare-grid-dim-icon">${dim.icon}</span>
+                                    <span class="compare-grid-dim-label">${dim.label}</span>
+                                </div>
+                                ${profs.map(p => `
+                                    <div class="compare-grid-cell" style="--prof-color: ${p.color}">
+                                        <div class="compare-grid-rating">
+                                            <span class="compare-grid-rating-star">⭐</span>
+                                            <span class="compare-grid-rating-value" style="color: ${p.color}">${p.avgRating}</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    } else if (dim.type === 'tags') {
+                        return `
+                            <div class="compare-grid-row">
+                                <div class="compare-grid-label-cell">
+                                    <span class="compare-grid-dim-icon">${dim.icon}</span>
+                                    <span class="compare-grid-dim-label">${dim.label}</span>
+                                </div>
+                                ${profs.map(p => `
+                                    <div class="compare-grid-cell" style="--prof-color: ${p.color}">
+                                        <div class="compare-grid-tags">
+                                            ${p[dim.valueKey].map(t => `
+                                                <span class="compare-grid-tag" style="border-color: ${p.color}; color: ${p.color}">${t}</span>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+                    return '';
+                }).join('')}
+            </div>
+        </div>
+
+        <div class="compare-result-delta-card">
+            <h4 class="compare-delta-title">📈 数据差异分析</h4>
+            <div class="compare-delta-list">
+                <div class="compare-delta-item">
+                    <span class="compare-delta-label">人物数量差距</span>
+                    <span class="compare-delta-value">${maxCharCount - Math.min(...profs.map(p => p.characterCount))}人</span>
+                </div>
+                <div class="compare-delta-item">
+                    <span class="compare-delta-label">桥段数量差距</span>
+                    <span class="compare-delta-value">${maxBridgeCount - Math.min(...profs.map(p => p.bridgeCount))}个</span>
+                </div>
+                <div class="compare-delta-item">
+                    <span class="compare-delta-label">剧集数量差距</span>
+                    <span class="compare-delta-value">${maxDramaCount - Math.min(...profs.map(p => p.dramaCount))}部</span>
+                </div>
+                <div class="compare-delta-item">
+                    <span class="compare-delta-label">评分差距</span>
+                    <span class="compare-delta-value">${(Math.max(...profs.map(p => p.avgRating)) - Math.min(...profs.map(p => p.avgRating))).toFixed(1)}分</span>
+                </div>
+            </div>
         </div>
 
         ${result.sharedDramas.length > 0 ? `
         <div class="compare-shared-section">
             <h4 class="compare-shared-title">🔗 共同相关剧集</h4>
-            <p class="compare-shared-desc">以下剧集同时涉及所选的多个职业</p>
+            <p class="compare-shared-desc">以下剧集同时涉及所选的多个职业，是跨职业互动的经典作品</p>
             <div class="compare-shared-dramas">
                 ${result.sharedDramas.map(d => `
                     <div class="compare-shared-drama-chip" data-drama-id="${d.id}">
@@ -2206,16 +2353,16 @@ function renderCompareResult(result) {
 
         ${result.sharedTags.length > 0 ? `
         <div class="compare-shared-section">
-            <h4 class="compare-shared-title">🏷️ 共同标签</h4>
-            <p class="compare-shared-desc">这些职业共有的特征标签</p>
+            <h4 class="compare-shared-title">🏷️ 共同特征标签</h4>
+            <p class="compare-shared-desc">这些职业共有的特征标签，反映了港剧角色的共同特质</p>
             <div class="compare-shared-tags">
                 ${result.sharedTags.map(t => `<span class="compare-shared-tag">${t}</span>`).join('')}
             </div>
         </div>
         ` : `
         <div class="compare-shared-section">
-            <h4 class="compare-shared-title">🏷️ 标签对比</h4>
-            <p class="compare-shared-desc">这些职业没有共同标签，展现了港剧职业世界的多样性</p>
+            <h4 class="compare-shared-title">🏷️ 特征对比</h4>
+            <p class="compare-shared-desc">这些职业没有共同标签，展现了港剧职业世界的丰富多样性</p>
         </div>
         `}
     `;
