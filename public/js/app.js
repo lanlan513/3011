@@ -161,6 +161,9 @@ function navigateTo(pageName, addToHistory = true) {
         case 'couples':
             loadCouples();
             break;
+        case 'professions':
+            initProfessionsPage();
+            break;
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -202,6 +205,9 @@ async function loadHomePage() {
         }
         if (stats.coupleCount) {
             animateNumber('stat-couples', stats.coupleCount);
+        }
+        if (stats.professionCount !== undefined) {
+            animateNumber('stat-professions', stats.professionCount);
         }
     }
 
@@ -1812,4 +1818,414 @@ async function loadCpRanking() {
             openVoteModal(id);
         });
     });
+}
+
+let selectedCompareProfessions = [];
+
+let professionsInitialized = false;
+
+function initProfessionsPage() {
+    if (professionsInitialized) {
+        loadProfessions();
+        return;
+    }
+    professionsInitialized = true;
+
+    document.querySelectorAll('.profession-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetTab = tab.dataset.tab;
+            document.querySelectorAll('.profession-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelectorAll('.profession-tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(`profession-${targetTab}-tab`).classList.add('active');
+
+            if (targetTab === 'compare') {
+                loadCompareSelector();
+            }
+        });
+    });
+
+    const profSearch = document.getElementById('profession-search');
+    const profCategory = document.getElementById('profession-category-select');
+    const profTag = document.getElementById('profession-tag-select');
+    const profReset = document.getElementById('profession-reset-btn');
+
+    let profSearchTimeout;
+    profSearch.addEventListener('input', () => {
+        clearTimeout(profSearchTimeout);
+        profSearchTimeout = setTimeout(loadProfessions, 300);
+    });
+
+    profCategory.addEventListener('change', loadProfessions);
+    profTag.addEventListener('change', loadProfessions);
+
+    profReset.addEventListener('click', () => {
+        profSearch.value = '';
+        profCategory.value = '';
+        profTag.value = '';
+        loadProfessions();
+    });
+
+    const compareGenBtn = document.getElementById('compare-generate-btn');
+    if (compareGenBtn) {
+        compareGenBtn.addEventListener('click', generateComparison);
+    }
+
+    loadProfessionCategories();
+    loadProfessionTags();
+}
+
+async function loadProfessionCategories() {
+    const categories = await apiCall('/professions/categories');
+    const select = document.getElementById('profession-category-select');
+    if (!select || !categories) return;
+    categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat;
+        select.appendChild(option);
+    });
+}
+
+async function loadProfessionTags() {
+    const tags = await apiCall('/professions/tags');
+    const select = document.getElementById('profession-tag-select');
+    if (!select || !tags) return;
+    tags.forEach(tag => {
+        const option = document.createElement('option');
+        option.value = tag;
+        option.textContent = tag;
+        select.appendChild(option);
+    });
+}
+
+async function loadProfessions() {
+    const search = document.getElementById('profession-search').value;
+    const category = document.getElementById('profession-category-select').value;
+    const tag = document.getElementById('profession-tag-select').value;
+
+    const container = document.getElementById('professions-list');
+    const loading = document.getElementById('professions-loading');
+    const empty = document.getElementById('professions-empty');
+
+    loading.style.display = 'block';
+    container.innerHTML = '';
+    empty.style.display = 'none';
+
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (category) params.append('category', category);
+    if (tag) params.append('tag', tag);
+
+    const professions = await apiCall(`/professions?${params.toString()}`);
+
+    loading.style.display = 'none';
+
+    if (!professions || professions.length === 0) {
+        empty.style.display = 'block';
+        return;
+    }
+
+    container.innerHTML = professions.map(prof => createProfessionCard(prof)).join('');
+
+    container.querySelectorAll('.profession-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const id = parseInt(card.dataset.id);
+            showProfessionDetail(id);
+        });
+    });
+}
+
+function createProfessionCard(prof) {
+    return `
+        <div class="profession-card" data-id="${prof.id}" style="--prof-color: ${prof.color}">
+            <div class="profession-card-header" style="background: linear-gradient(135deg, ${prof.color}33, ${prof.color}11);">
+                <div class="profession-icon-large">${prof.icon}</div>
+                <div class="profession-category-badge" style="background: ${prof.color}">${prof.category}</div>
+            </div>
+            <div class="profession-card-body">
+                <h3 class="profession-name">${prof.name}</h3>
+                <p class="profession-desc">${prof.description}</p>
+                <div class="profession-tags-row">
+                    ${prof.tags.slice(0, 4).map(t => `<span class="profession-tag-mini">${t}</span>`).join('')}
+                </div>
+                <div class="profession-stats-row">
+                    <span class="profession-stat">👤 ${prof.characterCount}人</span>
+                    <span class="profession-stat">🎬 ${prof.bridgeCount}桥段</span>
+                    <span class="profession-stat">📺 ${prof.dramaCount}剧集</span>
+                </div>
+                <div class="profession-dramas-row">
+                    ${prof.dramas.slice(0, 3).map(d => `<span class="profession-drama-chip">《${d.title}》</span>`).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function showProfessionDetail(id) {
+    const prof = await apiCall(`/professions/${id}`);
+    const container = document.getElementById('profession-detail');
+
+    if (!prof) {
+        container.innerHTML = '<p>加载失败</p>';
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="prof-detail-header" style="--prof-color: ${prof.color}">
+            <div class="prof-detail-hero" style="background: linear-gradient(135deg, ${prof.color}44, ${prof.color}11);">
+                <div class="prof-detail-icon">${prof.icon}</div>
+                <div class="prof-detail-category-badge" style="background: ${prof.color}">${prof.category}</div>
+            </div>
+            <div class="prof-detail-info">
+                <h2 class="prof-detail-name">${prof.name}</h2>
+                <p class="prof-detail-desc">${prof.description}</p>
+                <div class="prof-detail-tags">
+                    ${prof.tags.map(t => `<span class="profession-tag-mini">${t}</span>`).join('')}
+                </div>
+                <div class="prof-detail-quick-stats">
+                    <span>👤 ${prof.representativeCharacters.length}位代表人物</span>
+                    <span>🎬 ${prof.classicBridges.length}个经典桥段</span>
+                    <span>📺 ${prof.relatedDramas.length}部相关剧集</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h3>👤 代表人物</h3>
+            <div class="prof-characters-grid">
+                ${prof.representativeCharacters.map(c => `
+                    <div class="prof-character-card" data-drama-id="${c.dramaId}">
+                        <div class="prof-character-avatar" style="background: linear-gradient(135deg, ${prof.color}, ${prof.color}88)">${c.name.charAt(0)}</div>
+                        <div class="prof-character-info">
+                            <div class="prof-character-name">${c.name}</div>
+                            <div class="prof-character-actor">饰演：${c.actor}</div>
+                            <div class="prof-character-role">${c.role}</div>
+                            <div class="prof-character-traits">
+                                ${c.traits.map(t => `<span class="trait-tag">${t}</span>`).join('')}
+                            </div>
+                            <div class="prof-character-scene">🎬 ${c.classicScene}</div>
+                            ${c.quote ? `
+                            <div class="prof-character-quote">
+                                <p>「${c.quote.text}」</p>
+                                <span>—— ${c.quote.character}</span>
+                            </div>
+                            ` : ''}
+                            <div class="prof-character-drama">出处：《${c.dramaTitle}》(${c.dramaYear}年)</div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h3>🎬 经典桥段</h3>
+            <div class="prof-bridges-grid">
+                ${prof.classicBridges.map(b => `
+                    <div class="prof-bridge-card" style="border-left-color: ${prof.color}">
+                        <div class="prof-bridge-header">
+                            <h4 class="prof-bridge-title">${b.title}</h4>
+                            <span class="prof-bridge-freq" style="background: ${prof.color}22; color: ${prof.color}">出现频率：${b.frequency}</span>
+                        </div>
+                        <p class="prof-bridge-desc">${b.description}</p>
+                        <div class="prof-bridge-dramas">
+                            ${b.dramas.map(d => `<span class="profession-drama-chip">《${d.title}》(${d.year})</span>`).join('')}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h3>📺 相关剧集</h3>
+            <div class="prof-related-dramas">
+                ${prof.relatedDramas.map(d => `
+                    <div class="prof-drama-card" data-drama-id="${d.id}">
+                        <div class="prof-drama-title">《${d.title}》</div>
+                        <div class="prof-drama-meta">
+                            <span>📅 ${d.year}年</span>
+                            <span>⭐ ${d.rating}</span>
+                            <span>📺 ${d.episodes}集</span>
+                        </div>
+                        <div class="prof-drama-genres">
+                            ${d.genre.map(g => `<span class="genre-tag">${g}</span>`).join('')}
+                        </div>
+                        <p class="prof-drama-synopsis">${d.synopsis}</p>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+
+    container.querySelectorAll('.prof-character-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const dramaId = parseInt(card.dataset.dramaId);
+            showDramaDetail(dramaId);
+        });
+    });
+
+    container.querySelectorAll('.prof-drama-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const dramaId = parseInt(card.dataset.dramaId);
+            showDramaDetail(dramaId);
+        });
+    });
+
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('profession-detail-page').classList.add('active');
+    pageHistory.push(currentPage);
+    currentPage = 'profession-detail';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function loadCompareSelector() {
+    const professions = await apiCall('/professions');
+    const container = document.getElementById('compare-profession-selector');
+    if (!container || !professions) return;
+
+    selectedCompareProfessions = [];
+
+    container.innerHTML = professions.map(p => `
+        <div class="compare-prof-chip" data-id="${p.id}" style="--prof-color: ${p.color}">
+            <span class="compare-prof-icon">${p.icon}</span>
+            <span class="compare-prof-name">${p.name}</span>
+        </div>
+    `).join('');
+
+    container.querySelectorAll('.compare-prof-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            const id = parseInt(chip.dataset.id);
+            const index = selectedCompareProfessions.indexOf(id);
+            if (index >= 0) {
+                selectedCompareProfessions.splice(index, 1);
+                chip.classList.remove('selected');
+            } else {
+                if (selectedCompareProfessions.length >= 4) return;
+                selectedCompareProfessions.push(id);
+                chip.classList.add('selected');
+            }
+        });
+    });
+}
+
+async function generateComparison() {
+    if (selectedCompareProfessions.length < 2) {
+        alert('请至少选择2个职业进行对比');
+        return;
+    }
+
+    const loading = document.getElementById('compare-loading');
+    const resultContainer = document.getElementById('compare-result-container');
+
+    loading.style.display = 'block';
+    resultContainer.style.display = 'none';
+
+    const ids = selectedCompareProfessions.join(',');
+    const result = await apiCall(`/professions/compare?ids=${ids}`);
+
+    loading.style.display = 'none';
+
+    if (!result || !result.professions) {
+        alert('对比分析失败，请重试');
+        return;
+    }
+
+    renderCompareResult(result);
+}
+
+function renderCompareResult(result) {
+    const container = document.getElementById('compare-result-container');
+    container.style.display = 'block';
+
+    const profs = result.professions;
+    const maxDramaCount = Math.max(...profs.map(p => p.dramaCount));
+    const maxCharCount = Math.max(...profs.map(p => p.characterCount));
+    const maxBridgeCount = Math.max(...profs.map(p => p.bridgeCount));
+
+    container.innerHTML = `
+        <div class="compare-result-header">
+            <h3 class="compare-result-title">📊 跨剧集职业对比分析</h3>
+            <p class="compare-result-subtitle">以下分析基于港剧数据库中的职业角色数据</p>
+        </div>
+
+        <div class="compare-cards-row">
+            ${profs.map(p => `
+                <div class="compare-result-card" style="--prof-color: ${p.color}; border-color: ${p.color}44">
+                    <div class="compare-result-card-header" style="background: ${p.color}22">
+                        <span class="compare-result-icon">${p.icon}</span>
+                        <h4 class="compare-result-name">${p.name}</h4>
+                        <span class="compare-result-cat" style="background: ${p.color}">${p.category}</span>
+                    </div>
+                    <div class="compare-result-stats">
+                        <div class="compare-stat-item">
+                            <span class="compare-stat-label">代表人物</span>
+                            <div class="compare-stat-bar-wrap">
+                                <div class="compare-stat-bar" style="width: ${(p.characterCount / maxCharCount) * 100}%; background: ${p.color}"></div>
+                            </div>
+                            <span class="compare-stat-value">${p.characterCount}人</span>
+                        </div>
+                        <div class="compare-stat-item">
+                            <span class="compare-stat-label">经典桥段</span>
+                            <div class="compare-stat-bar-wrap">
+                                <div class="compare-stat-bar" style="width: ${(p.bridgeCount / maxBridgeCount) * 100}%; background: ${p.color}"></div>
+                            </div>
+                            <span class="compare-stat-value">${p.bridgeCount}个</span>
+                        </div>
+                        <div class="compare-stat-item">
+                            <span class="compare-stat-label">相关剧集</span>
+                            <div class="compare-stat-bar-wrap">
+                                <div class="compare-stat-bar" style="width: ${(p.dramaCount / maxDramaCount) * 100}%; background: ${p.color}"></div>
+                            </div>
+                            <span class="compare-stat-value">${p.dramaCount}部</span>
+                        </div>
+                        <div class="compare-stat-item">
+                            <span class="compare-stat-label">平均评分</span>
+                            <span class="compare-stat-value highlight">⭐ ${p.avgRating}</span>
+                        </div>
+                    </div>
+                    <div class="compare-traits-row">
+                        ${p.topTraits.map(t => `<span class="compare-trait-tag">${t}</span>`).join('')}
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+
+        ${result.sharedDramas.length > 0 ? `
+        <div class="compare-shared-section">
+            <h4 class="compare-shared-title">🔗 共同相关剧集</h4>
+            <p class="compare-shared-desc">以下剧集同时涉及所选的多个职业</p>
+            <div class="compare-shared-dramas">
+                ${result.sharedDramas.map(d => `
+                    <div class="compare-shared-drama-chip" data-drama-id="${d.id}">
+                        📺 《${d.title}》(${d.year}年)
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        ` : ''}
+
+        ${result.sharedTags.length > 0 ? `
+        <div class="compare-shared-section">
+            <h4 class="compare-shared-title">🏷️ 共同标签</h4>
+            <p class="compare-shared-desc">这些职业共有的特征标签</p>
+            <div class="compare-shared-tags">
+                ${result.sharedTags.map(t => `<span class="compare-shared-tag">${t}</span>`).join('')}
+            </div>
+        </div>
+        ` : `
+        <div class="compare-shared-section">
+            <h4 class="compare-shared-title">🏷️ 标签对比</h4>
+            <p class="compare-shared-desc">这些职业没有共同标签，展现了港剧职业世界的多样性</p>
+        </div>
+        `}
+    `;
+
+    container.querySelectorAll('.compare-shared-drama-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            const dramaId = parseInt(chip.dataset.dramaId);
+            showDramaDetail(dramaId);
+        });
+    });
+
+    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }

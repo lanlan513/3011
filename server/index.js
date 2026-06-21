@@ -293,7 +293,8 @@ app.get('/api/stats', (req, res) => {
     locationCount: (data.locations || []).length,
     checkInCount: (data.checkIns || []).length,
     coupleCount: (data.couples || []).length,
-    cpVoteCount: (data.cpVotes || []).length
+    cpVoteCount: (data.cpVotes || []).length,
+    professionCount: (data.professions || []).length
   });
 });
 
@@ -890,6 +891,179 @@ app.get('/api/couples/:id', (req, res) => {
     dramas,
     classicScenes,
     totalVotes: totalVotes + userVotes
+  });
+});
+
+app.get('/api/professions', (req, res) => {
+  const { search, category, tag } = req.query;
+  const data = readData();
+  let professions = data.professions || [];
+
+  if (search) {
+    const keyword = search.toLowerCase();
+    professions = professions.filter(p =>
+      p.name.toLowerCase().includes(keyword) ||
+      p.description.toLowerCase().includes(keyword) ||
+      p.category.toLowerCase().includes(keyword) ||
+      p.tags.some(t => t.toLowerCase().includes(keyword)) ||
+      p.representativeCharacters.some(c =>
+        c.name.toLowerCase().includes(keyword) ||
+        c.actor.toLowerCase().includes(keyword)
+      )
+    );
+  }
+
+  if (category) {
+    professions = professions.filter(p => p.category === category);
+  }
+
+  if (tag) {
+    professions = professions.filter(p => p.tags.includes(tag));
+  }
+
+  const result = professions.map(prof => {
+    const dramas = prof.relatedDramas.map(dId => {
+      const drama = data.dramas.find(d => d.id === dId);
+      return drama ? { id: drama.id, title: drama.title, year: drama.year, rating: drama.rating, genre: drama.genre } : null;
+    }).filter(d => d !== null);
+
+    return {
+      id: prof.id,
+      name: prof.name,
+      icon: prof.icon,
+      category: prof.category,
+      color: prof.color,
+      description: prof.description,
+      tags: prof.tags,
+      characterCount: prof.representativeCharacters.length,
+      bridgeCount: prof.classicBridges.length,
+      dramaCount: dramas.length,
+      dramas
+    };
+  });
+
+  res.json(result);
+});
+
+app.get('/api/professions/categories', (req, res) => {
+  const data = readData();
+  const categories = [...new Set((data.professions || []).map(p => p.category))].sort();
+  res.json(categories);
+});
+
+app.get('/api/professions/tags', (req, res) => {
+  const data = readData();
+  const tags = [...new Set((data.professions || []).flatMap(p => p.tags))].sort();
+  res.json(tags);
+});
+
+app.get('/api/professions/compare', (req, res) => {
+  const { ids } = req.query;
+  if (!ids) {
+    return res.status(400).json({ error: '请提供要对比的职业ID，用逗号分隔' });
+  }
+
+  const data = readData();
+  const idList = ids.split(',').map(id => parseInt(id)).filter(id => !isNaN(id));
+
+  if (idList.length < 2) {
+    return res.status(400).json({ error: '至少需要选择2个职业进行对比' });
+  }
+
+  const professions = idList.map(id => {
+    const prof = (data.professions || []).find(p => p.id === id);
+    if (!prof) return null;
+
+    const dramas = prof.relatedDramas.map(dId => {
+      const drama = data.dramas.find(d => d.id === dId);
+      return drama ? { id: drama.id, title: drama.title, year: drama.year, rating: drama.rating, genre: drama.genre } : null;
+    }).filter(d => d !== null);
+
+    const avgRating = dramas.length > 0
+      ? (dramas.reduce((sum, d) => sum + d.rating, 0) / dramas.length).toFixed(1)
+      : 0;
+
+    return {
+      id: prof.id,
+      name: prof.name,
+      icon: prof.icon,
+      category: prof.category,
+      color: prof.color,
+      characterCount: prof.representativeCharacters.length,
+      bridgeCount: prof.classicBridges.length,
+      dramaCount: dramas.length,
+      avgRating: parseFloat(avgRating),
+      topTraits: prof.representativeCharacters.flatMap(c => c.traits).slice(0, 6),
+      dramas
+    };
+  }).filter(p => p !== null);
+
+  const sharedDramaIds = professions.length > 0
+    ? professions.reduce((acc, p) => acc.filter(id => p.dramas.some(d => d.id === id)), professions[0].dramas.map(d => d.id))
+    : [];
+
+  const sharedDramas = sharedDramaIds.map(id => {
+    const drama = data.dramas.find(d => d.id === id);
+    return drama ? { id: drama.id, title: drama.title, year: drama.year } : null;
+  }).filter(d => d !== null);
+
+  const sharedTags = professions.length > 0
+    ? professions.reduce((acc, p) => {
+        const prof = (data.professions || []).find(pp => pp.id === p.id);
+        return acc.filter(t => prof.tags.includes(t));
+      }, (data.professions || []).find(p => p.id === idList[0])?.tags || [])
+    : [];
+
+  res.json({ professions, sharedDramas, sharedTags });
+});
+
+app.get('/api/professions/:id', (req, res) => {
+  const data = readData();
+  const prof = (data.professions || []).find(p => p.id === parseInt(req.params.id));
+
+  if (!prof) {
+    return res.status(404).json({ error: '职业未找到' });
+  }
+
+  const characters = prof.representativeCharacters.map(c => {
+    const drama = data.dramas.find(d => d.id === c.dramaId);
+    const quote = c.quoteId ? data.quotes.find(q => q.id === c.quoteId) : null;
+    return {
+      name: c.name,
+      actor: c.actor,
+      dramaId: c.dramaId,
+      dramaTitle: drama ? drama.title : '未知',
+      dramaYear: drama ? drama.year : null,
+      role: c.role,
+      traits: c.traits,
+      classicScene: c.classicScene,
+      quote: quote ? { id: quote.id, text: quote.text, character: quote.character } : null
+    };
+  });
+
+  const bridges = prof.classicBridges.map(b => {
+    const bridgeDramas = b.dramas.map(dId => {
+      const drama = data.dramas.find(d => d.id === dId);
+      return drama ? { id: drama.id, title: drama.title, year: drama.year } : null;
+    }).filter(d => d !== null);
+    return { ...b, dramas: bridgeDramas };
+  });
+
+  const dramas = prof.relatedDramas.map(dId => {
+    const drama = data.dramas.find(d => d.id === dId);
+    if (!drama) return null;
+    const actors = drama.actors.map(a => {
+      const actorData = data.actors.find(act => act.id === a.actorId);
+      return { id: a.actorId, name: actorData ? actorData.name : '未知', role: a.role };
+    });
+    return { id: drama.id, title: drama.title, englishTitle: drama.englishTitle, year: drama.year, rating: drama.rating, genre: drama.genre, synopsis: drama.synopsis, actors };
+  }).filter(d => d !== null);
+
+  res.json({
+    ...prof,
+    representativeCharacters: characters,
+    classicBridges: bridges,
+    relatedDramas: dramas
   });
 });
 

@@ -61,6 +61,10 @@
                 <span class="nav-icon">💕</span>
                 <span class="nav-text">CP档案馆</span>
             </button>
+            <button class="nav-btn" data-page="professions">
+                <span class="nav-icon">🎭</span>
+                <span class="nav-text">职业宇宙</span>
+            </button>
         </div>
     </nav>
 
@@ -90,6 +94,10 @@
                 <div class="stat-item">
                     <span class="stat-number" id="stat-couples">--</span>
                     <span class="stat-label">对经典CP</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="stat-professions">--</span>
+                    <span class="stat-label">种经典职业</span>
                 </div>
             </div>
 
@@ -425,6 +433,76 @@
         <section id="actor-detail-page" class="page">
             <button class="back-btn" onclick="goBack()">← 返回列表</button>
             <div id="actor-detail"></div>
+        </section>
+
+        <section id="professions-page" class="page">
+            <div class="section-header">
+                <h2 class="section-title"><span class="tape-icon">🎭</span> 港剧职业宇宙</h2>
+                <div class="vhs-stripe"></div>
+            </div>
+            <p class="profession-intro">从警察到律师，从医生到记者，港剧塑造了一个个鲜活的职业群像。探索不同职业在港剧中的代表人物与经典桥段，发现职业之间的奇妙连接。</p>
+
+            <div class="profession-tabs-container">
+                <button class="profession-tab active" data-tab="universe">🌌 职业星图</button>
+                <button class="profession-tab" data-tab="compare">⚖️ 跨剧对比</button>
+            </div>
+
+            <div id="profession-universe-tab" class="profession-tab-content active">
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label class="filter-label">搜索职业</label>
+                        <input type="text" id="profession-search" class="filter-input" placeholder="输入职业名、角色名或演员...">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">职业分类</label>
+                        <select id="profession-category-select" class="filter-select">
+                            <option value="">全部分类</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">职业标签</label>
+                        <select id="profession-tag-select" class="filter-select">
+                            <option value="">全部标签</option>
+                        </select>
+                    </div>
+                    <button class="filter-btn" id="profession-reset-btn">重置</button>
+                </div>
+
+                <div class="professions-grid" id="professions-list"></div>
+
+                <div class="loading" id="professions-loading" style="display:none;">
+                    <div class="loading-spinner"></div>
+                    <p>加载中...</p>
+                </div>
+
+                <div class="empty-state" id="professions-empty" style="display:none;">
+                    <p>🎭 未找到相关职业</p>
+                </div>
+            </div>
+
+            <div id="profession-compare-tab" class="profession-tab-content">
+                <div class="compare-builder-card">
+                    <h3 class="compare-section-title">⚖️ 选择要对比的职业</h3>
+                    <p class="compare-subtitle">选择2-4个职业，查看它们在港剧中的异同与联系</p>
+                    <div class="compare-profession-selector" id="compare-profession-selector"></div>
+                    <button class="compare-generate-btn" id="compare-generate-btn">
+                        <span>📊</span>
+                        <span>开始对比分析</span>
+                    </button>
+                </div>
+
+                <div class="compare-result-container" id="compare-result-container" style="display:none;"></div>
+
+                <div class="loading" id="compare-loading" style="display:none;">
+                    <div class="loading-spinner"></div>
+                    <p>分析中...</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="profession-detail-page" class="page">
+            <button class="back-btn" onclick="goBack()">← 返回职业宇宙</button>
+            <div id="profession-detail"></div>
         </section>
 
         <section id="couples-page" class="page">
